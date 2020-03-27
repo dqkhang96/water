@@ -128,11 +128,12 @@ interface EnhancedTableToolbarProps {
   numSelected: number
   title: string
   addRow: () => void
+  deleteRows: () => void
 }
 
 const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
   const classes = useToolbarStyles();
-  const { numSelected, title, addRow } = props;
+  const { numSelected, title, addRow, deleteRows } = props;
 
   return (
     <Toolbar
@@ -151,7 +152,7 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
         )}
       {numSelected > 0 ? (
         <Tooltip title="Delete">
-          <IconButton aria-label="delete">
+          <IconButton aria-label="delete" onClick={deleteRows}>
             <DeleteIcon />
           </IconButton>
         </Tooltip>
@@ -205,12 +206,13 @@ interface SelfProps {
   headCells: HeadCell[]
   title: string
   updateProperty: (id: string, fieldName: string, value: any) => void
+  deleteRows: (ids: string[]) => void
   addRow: () => void
 }
 
 type Props = SelfProps
 
-export default function EnhancedTable({ rows, headCells, title, addRow, updateProperty }: Props) {
+export default function EnhancedTable({ rows, headCells, title, addRow, updateProperty, deleteRows }: Props) {
   const classes = useStyles();
   const [order, setOrder] = React.useState<Order>('asc');
   const [orderBy, setOrderBy] = React.useState<string>('');
@@ -306,12 +308,12 @@ export default function EnhancedTable({ rows, headCells, title, addRow, updatePr
         paddingLeft: 10, paddingRight: 10, width: "100%", marginBottom: 6, marginTop: 18
       }}>
         <Paper className={classes.paper} >
-          <EnhancedTableToolbar numSelected={selected.length} title={title} addRow={addRow} />
+          <EnhancedTableToolbar numSelected={selected.length} title={title} addRow={addRow} deleteRows={() => deleteRows(selected)} />
         </Paper>
       </Container>
       <Container style={{
         paddingLeft: 10, paddingRight: 10, width: "100%",
-        overflow: "hidden"
+        overflow: "auto"
       }}>
         <Paper className={classes.paper} >
           <TableContainer>

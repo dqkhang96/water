@@ -1,14 +1,15 @@
 import React, { Component } from 'react'
 import EnhancedTable, { HeadCell, Row } from '@/components/EnhancedTable';
 import { customers } from '@/redux/customers/selectors'
-import {updateCustomerProperty,loadCustomers} from '@/redux/customers/actions'
+import { updateCustomerProperty, loadCustomers, deleteCustomer } from '@/redux/customers/actions'
 import { Types } from '@/utils/types';
 import { ICustomer } from '@/redux/customers/types';
 import { addCustomer } from '@/redux/customers/actions'
 import { AppState } from '@/redux';
 import { connect } from 'react-redux';
 import { v4 as uuid4 } from 'uuid'
-import {customer} from '@/database'
+import { customer } from '@/database'
+
 const headCells: HeadCell[] = [{
     propertyName: "code",
     type: Types.STRING,
@@ -155,7 +156,8 @@ const headCells: HeadCell[] = [{
 const mapDispatchToProps = {
     addCustomer,
     updateCustomerProperty,
-    loadCustomers
+    loadCustomers,
+    deleteCustomer
 }
 
 const mapStateToProps = (state: AppState) => ({
@@ -168,8 +170,9 @@ interface SelfProps {
 
 interface PropsFromDispatch {
     addCustomer: typeof addCustomer
-    updateCustomerProperty:typeof updateCustomerProperty
-    loadCustomers:typeof loadCustomers
+    updateCustomerProperty: typeof updateCustomerProperty
+    loadCustomers: typeof loadCustomers
+    deleteCustomer: typeof deleteCustomer
 }
 
 interface PropsFromState {
@@ -178,7 +181,7 @@ interface PropsFromState {
 
 type Props = SelfProps & PropsFromState & PropsFromDispatch
 
-const newCustomer={
+const newCustomer = {
     _id: uuid4(),
     code: "NO",
     name: "Đinh Quang Khang",
@@ -205,33 +208,56 @@ const newCustomer={
 class CustomersPage extends Component<Props>{
     constructor(props: Props) {
         super(props)
-        this.addCustomer=this.addCustomer.bind(this)
-        this.updateCustomerProperty=this.updateCustomerProperty.bind(this)
+        this.addCustomer = this.addCustomer.bind(this)
+        this.updateCustomerProperty = this.updateCustomerProperty.bind(this)
+        this.deleteRows = this.deleteRows.bind(this)
     }
 
-    componentDidMount(){
-        customer.find({},(err,customers)=>{
-            this.props.loadCustomers(customers)
+    componentDidMount() {
+        customer.find({}, (err, customers) => {
+            if (err)
+                console.log(err)
+            else
+                this.props.loadCustomers(customers)
         })
     }
 
-    addCustomer(){
-        customer.insert(newCustomer,(err,customer)=>{
-            this.props.addCustomer(customer)
+    addCustomer() {
+        customer.insert({ ...newCustomer, _id: uuid4() }, (err, customer) => {
+            if (err)
+                console.log(err)
+            else
+                this.props.addCustomer(customer)
         })
     }
 
-    updateCustomerProperty(id:string,property:string,value:any){
-        updateCustomerProperty(id,property,value)
-        customer.update({_id:id},{$set:{property:value}})
+    deleteRows(ids: string[]) {
+        this.props.deleteCustomer(ids)
+        customer.remove({ _id: { $in: ids } }, (err, numRemoved) => {
+            if (err)
+                console.log(err)
+            else console.log(`Delete ${numRemoved} customer(s)!`)
+        })
+    }
+
+    updateCustomerProperty(id: string, property: string, value: any) {
+        this.props.updateCustomerProperty(id, property, value)
+        var newData: { [key: string]: any } = {}
+        newData[property] = value
+        customer.update({ _id: id }, { $set: newData }, {}, (err, numReplaced) => {
+            if (err)
+                console.log(err)
+            else console.log(`Update ${numReplaced} customer(s)!`)
+        })
     }
 
     render() {
-        const { customers ,} = this.props
+        const { customers, } = this.props
         return (
             <EnhancedTable
                 headCells={headCells}
-                updateProperty={updateCustomerProperty}
+                updateProperty={this.updateCustomerProperty}
+                deleteRows={this.deleteRows}
                 rows={customers as Row[]}
                 title="Quản lý khách hàng"
                 addRow={this.addCustomer}

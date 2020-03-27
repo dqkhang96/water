@@ -17,8 +17,8 @@ function createWindow(): void {
             devTools: process.env.NODE_ENV === 'production' ? false : true
         }
     });
-   
-    
+
+
     // and load the index.html of the app.
     mainWindow.loadURL(
         url.format({

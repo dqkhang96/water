@@ -122,7 +122,7 @@ export default function MiniDrawer() {
   }
 
   return (
-    <div className={classes.root} style={{  overflow:"hidden"}}>
+    <div className={classes.root}>
       <CssBaseline />
       <AppBar
         position="fixed"
