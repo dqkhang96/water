@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
@@ -23,13 +23,22 @@ import LocalAtmIcon from '@material-ui/icons/LocalAtm';
 import LinearScaleIcon from '@material-ui/icons/LinearScale';
 import PeopleAltOutlinedIcon from '@material-ui/icons/PeopleAltOutlined';
 import AccountBalanceIcon from '@material-ui/icons/AccountBalance';
+import Container from '@material-ui/core/Container'
 import CustomersPage from '@/pages/CustomersPage'
 import DateFnsUtils from '@date-io/date-fns';
+import { loadScreen } from '@/redux/screen/actions'
+import { loadTariffs } from '@/redux/tariffs/actions'
+import { loadCustomers } from '@/redux/customers/actions'
+import { loadGlands } from '@/redux/glands/actions'
+import TariffPage from '@/pages/TariffPage'
+import GlandPage from '@/pages/GlandPage'
+import { tariff, customer, gland } from '@/database'
+
 import {
   MuiPickersUtilsProvider,
-  KeyboardTimePicker,
-  KeyboardDatePicker,
 } from '@material-ui/pickers';
+
+import { connect } from 'react-redux';
 
 const drawerWidth = 240;
 
@@ -95,12 +104,64 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
+const mapDispatchToProps = {
+  loadScreen,
+  loadTariffs,
+  loadCustomers,
+  loadGlands
+}
 
-export default function MiniDrawer() {
-  const classes = useStyles();
-  const theme = useTheme();
+interface PropsFromDispatch {
+  loadScreen: typeof loadScreen
+  loadTariffs: typeof loadTariffs
+  loadCustomers: typeof loadCustomers
+  loadGlands: typeof loadGlands
+}
+
+interface SelfProps {
+
+}
+
+type Props = PropsFromDispatch & SelfProps
+
+function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands }: Props) {
+
+
   const [open, setOpen] = useState(false);
   const [pageId, changePage] = useState(PageIds.CUSTOMERS)
+  const theme = useTheme();
+  const classes = useStyles(theme);
+
+  useEffect(() => {
+    gland.find({}, (err, glands) => {
+      if (err)
+        console.log(err)
+      else
+        loadGlands(glands)
+    })
+    tariff.find({}, (err, tariffs) => {
+      if (err)
+        console.log(err)
+      else
+        loadTariffs(tariffs)
+    })
+    customer.find({}, (err, customers) => {
+      if (err)
+        console.log(err)
+      else
+        loadCustomers(customers)
+    })
+    window.addEventListener('resize', function (event: any) {
+      event.preventDefault()
+      if (event.srcElement !== null) {
+        loadScreen({
+          height: event.srcElement.innerHeight as number,
+          width: event.srcElement.innerWidth as number,
+        })
+      }
+
+    });
+  });
 
   const handleChangePage = (pageId: PageIds) => {
     changePage(pageId)
@@ -117,7 +178,9 @@ export default function MiniDrawer() {
   const page = (pageId: PageIds) => {
     switch (pageId) {
       case PageIds.CUSTOMERS: return <CustomersPage />
-      default: return <CustomersPage />
+      case PageIds.TARIFFS: return <TariffPage />
+      case PageIds.GLANDS: return <GlandPage />
+      default: return <GlandPage />
     }
   }
 
@@ -170,7 +233,7 @@ export default function MiniDrawer() {
           {[{ label: 'Hóa đơn', pageId: PageIds.BILLS, icon: <ReceiptOutlinedIcon /> },
           { label: 'Bảng giá', pageId: PageIds.TARIFFS, icon: <LocalAtmIcon /> },
           { label: 'Tuyến', pageId: PageIds.GLANDS, icon: <LinearScaleIcon /> }].map((item, index) => (
-            <ListItem button key={item.pageId} onFocusVisible={() => handleChangePage(item.pageId)}>
+            <ListItem button key={item.pageId} onClick={() => handleChangePage(item.pageId)}>
               <ListItemIcon>{item.icon}</ListItemIcon>
               <ListItemText primary={item.label} />
             </ListItem>
@@ -180,19 +243,24 @@ export default function MiniDrawer() {
         <List>
           {[{ label: 'Khách hàng', pageId: PageIds.CUSTOMERS, icon: <PeopleAltOutlinedIcon /> },
           { label: 'Ngân hàng', pageId: PageIds.BANKS, icon: <AccountBalanceIcon /> }].map((item, index) => (
-            <ListItem button key={item.pageId} onFocusVisible={() => handleChangePage(item.pageId)}>
+            <ListItem button key={item.pageId} onClick={() => handleChangePage(item.pageId)}>
               <ListItemIcon>{item.icon}</ListItemIcon>
               <ListItemText primary={item.label} />
             </ListItem>
           ))}
         </List>
       </Drawer>
-      <main >
+      <main className={classes.content} >
+
         <div className={classes.toolbar} />
+
         <MuiPickersUtilsProvider utils={DateFnsUtils}>
           {page(pageId)}
         </MuiPickersUtilsProvider>
+
       </main>
     </div>
   );
 }
+
+export default connect(null, mapDispatchToProps)(MiniDrawer)

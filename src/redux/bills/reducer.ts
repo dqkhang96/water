@@ -1,81 +1,93 @@
-import {IBill,IChargeType,IPayType} from './types'
-import {Actions, ActionTypes} from './actions'
+import { IBill, IChargeType, IPayType } from './types'
+import { Actions, ActionTypes } from './actions'
 import { stat } from 'fs'
 
 
 export interface State {
     items: IBill[]
-    changeTypes:IChargeType[]
-    payTypes:IPayType[]
+    changeTypes: IChargeType[]
+    payTypes: IPayType[]
 }
 
 
-const initState:State ={
-    items:[],
-    changeTypes:[],
-    payTypes:[]
-} 
+const initState: State = {
+    items: [],
+    changeTypes: [],
+    payTypes: []
+}
 
 export function reducer(state: State = initState, action: Actions) {
     switch (action.type) {
-        case ActionTypes.LOAD_BILLS:{
+        case ActionTypes.LOAD_BILLS: {
             return {
                 ...state,
-                items:action.payload
+                items: action.payload
             }
         }
-        case ActionTypes.ADD_BILL:{
+        case ActionTypes.ADD_BILL: {
             return {
                 ...state,
-                items:[...state.items,action.payload]
+                items: [...state.items, action.payload]
             }
         }
-        case ActionTypes.DELETE_BILL:{
-            var newItems=[...state.items]
-            newItems=newItems.filter((item)=>item._id!==action.payload)
+        case ActionTypes.DELETE_BILL: {
+            var newItems = [...state.items]
+            newItems = newItems.filter((item) => item._id !== action.payload)
             return {
                 ...state,
-                items:newItems
+                items: newItems
             }
         }
-        case ActionTypes.LOAD_CHANGE_TYPES:{
+        case ActionTypes.UPDATE_BILL_PROPERTY: {
+            var newItems = [...state.items]
+            var indexItemChange: number = newItems.findIndex((item) => item._id === action.payload._id)
+
+            if (indexItemChange === -1)
+                return state;
+            (newItems[indexItemChange] as { [key: string]: any })[action.payload.property] = action.payload.value
             return {
                 ...state,
-                changeTypes:action.payload
+                items: newItems
             }
         }
-        case ActionTypes.ADD_CHANGE_TYPE:{
+        case ActionTypes.LOAD_CHANGE_TYPES: {
             return {
                 ...state,
-                changeTypes:[...state.changeTypes,action.payload]
+                changeTypes: action.payload
             }
         }
-        case ActionTypes.DELETE_CHANGE_TYPE:{
-            var newChangeTypes=[...state.changeTypes]
-            newChangeTypes=newChangeTypes.filter((item)=>item._id!==action.payload)
+        case ActionTypes.ADD_CHANGE_TYPE: {
             return {
                 ...state,
-                changeTypes:newChangeTypes
+                changeTypes: [...state.changeTypes, action.payload]
             }
         }
-        case ActionTypes.LOAD_PAY_TYPES:{
+        case ActionTypes.DELETE_CHANGE_TYPE: {
+            var newChangeTypes = [...state.changeTypes]
+            newChangeTypes = newChangeTypes.filter((item) => item._id !== action.payload)
             return {
                 ...state,
-                payTypes:action.payload
+                changeTypes: newChangeTypes
             }
         }
-        case ActionTypes.ADD_PAY_TYPE:{
+        case ActionTypes.LOAD_PAY_TYPES: {
             return {
                 ...state,
-                payTypes:[...state.payTypes,action.payload]
+                payTypes: action.payload
             }
         }
-        case ActionTypes.DELETE_PAY_TYPE:{
-            var newPayTypes=[...state.payTypes]
-            newPayTypes=newPayTypes.filter((item)=>item._id!==action.payload)
+        case ActionTypes.ADD_PAY_TYPE: {
             return {
                 ...state,
-                payTypes:newPayTypes
+                payTypes: [...state.payTypes, action.payload]
+            }
+        }
+        case ActionTypes.DELETE_PAY_TYPE: {
+            var newPayTypes = [...state.payTypes]
+            newPayTypes = newPayTypes.filter((item) => item._id !== action.payload)
+            return {
+                ...state,
+                payTypes: newPayTypes
             }
         }
         default: return state

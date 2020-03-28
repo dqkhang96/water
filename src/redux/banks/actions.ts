@@ -1,11 +1,12 @@
 
-import {IBank} from './types'
+import { IBank } from './types'
 import { action } from 'typesafe-actions'
 export enum ActionTypes {
 
-    LOAD_BANKS="LOAD_BANKS",
-    ADD_BANK="ADD_BANK",
-    DELETE_BANK="DELETE_BANK",
+    LOAD_BANKS = "LOAD_BANKS",
+    ADD_BANK = "ADD_BANK",
+    DELETE_BANK = "DELETE_BANK",
+    UPDATE_BANK_PROPERTY = "UPDATE_BANK_PROPERTY"
 }
 
 
@@ -15,8 +16,12 @@ export const loadBanks = (banks: IBank[]) => action(ActionTypes.LOAD_BANKS, bank
 export interface addBank { type: ActionTypes.ADD_BANK, payload: IBank }
 export const addBank = (bank: IBank) => action(ActionTypes.ADD_BANK, bank)
 
-export interface deleteBank { type: ActionTypes.DELETE_BANK, payload: string }
-export const deleteBank = (bankId: string) => action(ActionTypes.DELETE_BANK, bankId)
+export interface deleteBank { type: ActionTypes.DELETE_BANK, payload: string | string[] }
+export const deleteBank = (bankId: string | string[]) => action(ActionTypes.DELETE_BANK, bankId)
+
+export interface updateBankProperty { type: ActionTypes.UPDATE_BANK_PROPERTY, payload: { _id: string, property: string, value: any } }
+export const updateBankProperty = (id: string, property: string, value: any) => action(ActionTypes.UPDATE_BANK_PROPERTY, { _id: id, property, value })
 
 
-export type Actions=loadBanks|addBank|deleteBank
+
+export type Actions = loadBanks | addBank | deleteBank | updateBankProperty

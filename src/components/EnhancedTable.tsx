@@ -1,4 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import electron from 'electron'
+
 import ReactDOM from 'react-dom'
 import clsx from 'clsx';
 import { createStyles, lighten, makeStyles, Theme } from '@material-ui/core/styles';
@@ -28,8 +30,15 @@ import { IBill } from '@/redux/bills/types';
 import Container from '@material-ui/core/Container';
 import AddBoxIcon from '@material-ui/icons/AddBox';
 import InputDynamic from '@/components/InputDynamic'
+import { ITariff } from '@/redux/tariffs/types';
+import { IGland } from '@/redux/glands/types';
+import { ResizableBox } from 'react-resizable';
+import { Resizable } from 're-resizable'
+import { Box } from '@material-ui/core';
+import VerticalAlignTopSharpIcon from '@material-ui/icons/VerticalAlignTopSharp';
+import { IScreen } from '@/redux/screen/types';
 
-export type Row = (ICustomer | IBill) & { [key: string]: string | number }
+export type Row = (ICustomer | IBill | ITariff | IGland) & { [key: string]: string | number }
 
 
 type Order = 'asc' | 'desc';
@@ -75,30 +84,36 @@ function EnhancedTableHead(props: EnhancedTableProps) {
         </TableCell>
         {headCells.map(headCell => (
           <TableCell
+            padding={"default"}
             key={headCell.propertyName}
             align={"left"}
-            scope="row" padding="default"
+            scope="row"
             sortDirection={orderBy === headCell.propertyName ? order : false}
             component="th"
             className={classes.tableCell}
           >
-            <TableSortLabel
-              active={orderBy === headCell.propertyName}
-              direction={orderBy === headCell.propertyName ? order : 'asc'}
-              onClick={createSortHandler(headCell.propertyName)}
-              style={{ whiteSpace: 'nowrap', minWidth: 200, textAlign: "center" }}
+            <Resizable
+              enable={{ right: true }}
             >
-              {headCell.label}
-              {orderBy === headCell.propertyName ? (
-                <span className={classes.visuallyHidden}>
-                  {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
-                </span>
-              ) : null}
-            </TableSortLabel>
+              <TableSortLabel
+                className={classes.tableLabel}
+                active={orderBy === headCell.propertyName}
+                direction={orderBy === headCell.propertyName ? order : 'asc'}
+                onClick={createSortHandler(headCell.propertyName)}
+              >
+                {headCell.label}
+                {orderBy === headCell.propertyName ? (
+                  <span className={classes.visuallyHidden}>
+                    {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
+                  </span>
+                ) : null}
+              </TableSortLabel>
+
+            </Resizable>
           </TableCell>
         ))}
       </TableRow>
-    </TableHead>
+    </TableHead >
   );
 }
 
@@ -175,17 +190,35 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
-      width: '100%',
+      display: "flex",
+      flexDirection: "column",
     },
     paper: {
-      width: '100%',
-      marginBottom: theme.spacing(2),
+      marginBottom: theme.spacing(1)
+    },
+    container: {
+      paddingLeft: 10, paddingRight: 10,
+    },
+    tableContainer: {
+      paddingLeft: 0, paddingRight: 0,
     },
     table: {
-      minWidth: 750,
+
     },
     tableCell: {
-      padding: theme.spacing(0)
+      padding: theme.spacing(0),
+      backgroundCcolor: '#fff',
+      position: 'sticky',
+      top: 0,
+    },
+    tableLabel: {
+      whiteSpace: 'nowrap', minWidth: 200, textAlign: "center"
+    },
+    tableLabelCheckbox: {
+
+    },
+    input: {
+      width: "95%"
     },
     visuallyHidden: {
       border: 0,
@@ -208,11 +241,12 @@ interface SelfProps {
   updateProperty: (id: string, fieldName: string, value: any) => void
   deleteRows: (ids: string[]) => void
   addRow: () => void
+  screen: IScreen
 }
 
 type Props = SelfProps
 
-export default function EnhancedTable({ rows, headCells, title, addRow, updateProperty, deleteRows }: Props) {
+export default function EnhancedTable({ rows, headCells, title, addRow, updateProperty, deleteRows, screen }: Props) {
   const classes = useStyles();
   const [order, setOrder] = React.useState<Order>('asc');
   const [orderBy, setOrderBy] = React.useState<string>('');
@@ -294,34 +328,32 @@ export default function EnhancedTable({ rows, headCells, title, addRow, updatePr
     setPage(0);
   };
 
-  const handleChangeDense = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setDense(event.target.checked);
-  };
-
   const isSelected = (_id: string) => selected.indexOf(_id) !== -1;
 
   const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.length - page * rowsPerPage);
 
   return (
-    <div>
-      <Container style={{
-        paddingLeft: 10, paddingRight: 10, width: "100%", marginBottom: 6, marginTop: 18
+    <div className={classes.root}>
+      <Container className={classes.container} style={{
+        marginBottom: 8, marginTop: 18
       }}>
         <Paper className={classes.paper} >
-          <EnhancedTableToolbar numSelected={selected.length} title={title} addRow={addRow} deleteRows={() => deleteRows(selected)} />
+          <EnhancedTableToolbar numSelected={selected.length} title={title} addRow={addRow} deleteRows={() => {
+            deleteRows(selected)
+            setSelected([])
+          }} />
         </Paper>
       </Container>
-      <Container style={{
-        paddingLeft: 10, paddingRight: 10, width: "100%",
-        overflow: "auto"
-      }}>
+      <Container fixed className={classes.container} >
         <Paper className={classes.paper} >
-          <TableContainer>
+          <TableContainer className={classes.tableContainer}
+            style={{ height: 0.97 * (screen.height - 230) }}
+          >
             <Table
               className={classes.table}
               aria-labelledby="tableTitle"
               size={dense ? 'small' : 'medium'}
-              aria-label="enhanced table"
+              stickyHeader
             >
               <EnhancedTableHead
                 headCells={headCells}
@@ -360,8 +392,8 @@ export default function EnhancedTable({ rows, headCells, title, addRow, updatePr
                         </TableCell> */}
                         {headCells.map((cel, _) => (
                           <TableCell key={`${cel.propertyName}-${row._id}`} component="td" id={labelId}
-                            scope="row" padding="default" className={classes.tableCell}>
-                            <InputDynamic onChange={(value) => updateProperty(row._id, cel.propertyName, value)} headCell={cel} value={row[cel.propertyName]} />
+                            scope="row" padding={cel.type === Types.BOOLEAN ? "checkbox" : "default"} className={classes.tableCell}>
+                            <InputDynamic classes={classes.input} onChange={(value) => updateProperty(row._id, cel.propertyName, value)} headCell={cel} value={row[cel.propertyName]} />
                           </TableCell>
                         ))}
                       </TableRow>
@@ -385,10 +417,6 @@ export default function EnhancedTable({ rows, headCells, title, addRow, updatePr
             onChangeRowsPerPage={handleChangeRowsPerPage}
           />
         </Paper>
-        <FormControlLabel
-          control={<Switch checked={dense} onChange={handleChangeDense} />}
-          label="Dense padding"
-        />
       </Container>
 
     </div>

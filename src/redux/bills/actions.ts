@@ -1,17 +1,20 @@
 
-import {IBill,IChargeType,IPayType} from './types'
+import { IBill, IChargeType, IPayType } from './types'
 import { action } from 'typesafe-actions'
 
 export enum ActionTypes {
-    LOAD_BILLS="LOAD_BILLS",
-    ADD_BILL="ADD_BILL",
-    DELETE_BILL="DELETE_BILL",
-    LOAD_CHANGE_TYPES="LOAD_CHANGE_TYPES",
-    ADD_CHANGE_TYPE="ADD_CHANGE_TYPE",
-    DELETE_CHANGE_TYPE="DELETE_CHANGE_TYPE",
-    LOAD_PAY_TYPES="LOAD_PAY_TYPES",
-    ADD_PAY_TYPE="ADD_PAY_TYPE",
-    DELETE_PAY_TYPE="DELETE_PAY_TYPE"
+    LOAD_BILLS = "LOAD_BILLS",
+    ADD_BILL = "ADD_BILL",
+    DELETE_BILL = "DELETE_BILL",
+    UPDATE_BILL_PROPERTY = "UPDATE_BILL_PROPERTY",
+
+    LOAD_CHANGE_TYPES = "LOAD_CHANGE_TYPES",
+    ADD_CHANGE_TYPE = "ADD_CHANGE_TYPE",
+    DELETE_CHANGE_TYPE = "DELETE_CHANGE_TYPE",
+    LOAD_PAY_TYPES = "LOAD_PAY_TYPES",
+    ADD_PAY_TYPE = "ADD_PAY_TYPE",
+    DELETE_PAY_TYPE = "DELETE_PAY_TYPE"
+
 }
 
 export interface loadBills { type: ActionTypes.LOAD_BILLS, payload: IBill[] }
@@ -22,6 +25,10 @@ export const addBill = (bill: IBill) => action(ActionTypes.ADD_BILL, bill)
 
 export interface deleteBill { type: ActionTypes.DELETE_BILL, payload: string }
 export const deleteBill = (billId: number) => action(ActionTypes.DELETE_BILL, billId)
+
+export interface updateBillProperty { type: ActionTypes.UPDATE_BILL_PROPERTY, payload: { _id: string, property: string, value: any } }
+export const updateBillProperty = (id: string, property: string, value: any) => action(ActionTypes.UPDATE_BILL_PROPERTY, { _id: id, property, value })
+
 
 export interface loadChangeTypes { type: ActionTypes.LOAD_CHANGE_TYPES, payload: IChargeType[] }
 export const loadChangeTypes = (changeTypes: IChargeType[]) => action(ActionTypes.LOAD_CHANGE_TYPES, changeTypes)
@@ -42,4 +49,4 @@ export interface deletePayType { type: ActionTypes.DELETE_PAY_TYPE, payload: str
 export const deletePayType = (payTypeId: number) => action(ActionTypes.DELETE_PAY_TYPE, payTypeId)
 
 
-export type Actions=loadBills|addBill|deleteBill|loadChangeTypes|addChangeType|deleteChangeType|loadPayTypes|addPayType|deletePayType
+export type Actions = loadBills | addBill | deleteBill | updateBillProperty | loadChangeTypes | addChangeType | deleteChangeType | loadPayTypes | addPayType | deletePayType

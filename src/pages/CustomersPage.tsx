@@ -9,6 +9,8 @@ import { AppState } from '@/redux';
 import { connect } from 'react-redux';
 import { v4 as uuid4 } from 'uuid'
 import { customer } from '@/database'
+import { screen } from '@/redux/screen/selectors'
+import { IScreen } from '@/redux/screen/types'
 
 const headCells: HeadCell[] = [{
     propertyName: "code",
@@ -44,7 +46,7 @@ const headCells: HeadCell[] = [{
     type: Types.GLAND,
     isArray: true,
     disableEditor: false,
-    label: "Bảng giá",
+    label: "Tuyến",
     disablePadding: false,
 },
 {
@@ -161,7 +163,8 @@ const mapDispatchToProps = {
 }
 
 const mapStateToProps = (state: AppState) => ({
-    customers: customers(state)
+    customers: customers(state),
+    screen: screen(state)
 })
 
 interface SelfProps {
@@ -177,6 +180,7 @@ interface PropsFromDispatch {
 
 interface PropsFromState {
     customers: ICustomer[]
+    screen: IScreen
 }
 
 type Props = SelfProps & PropsFromState & PropsFromDispatch
@@ -195,13 +199,13 @@ const newCustomer = {
     taxCode: "Ngon",
     email: "dqkhang96@gmail.com",
     contractCode: "MK_00",
-    contractDate: "14-02-1996",
+    contractDate: "",
     chargeTypeId: "",
     payTypeId: "",
     environmentalProtectionFee: 10,
     bankId: "",
-    beginUse: "14-02-1996",
-    endUse: "14-02-1996",
+    beginUse: "",
+    endUse: "",
     active: true
 }
 
@@ -214,12 +218,7 @@ class CustomersPage extends Component<Props>{
     }
 
     componentDidMount() {
-        customer.find({}, (err, customers) => {
-            if (err)
-                console.log(err)
-            else
-                this.props.loadCustomers(customers)
-        })
+
     }
 
     addCustomer() {
@@ -233,7 +232,7 @@ class CustomersPage extends Component<Props>{
 
     deleteRows(ids: string[]) {
         this.props.deleteCustomer(ids)
-        customer.remove({ _id: { $in: ids } }, (err, numRemoved) => {
+        customer.remove({ _id: { $in: ids } }, { multi: true }, (err, numRemoved) => {
             if (err)
                 console.log(err)
             else console.log(`Delete ${numRemoved} customer(s)!`)
@@ -252,9 +251,10 @@ class CustomersPage extends Component<Props>{
     }
 
     render() {
-        const { customers, } = this.props
+        const { customers, screen } = this.props
         return (
             <EnhancedTable
+                screen={screen}
                 headCells={headCells}
                 updateProperty={this.updateCustomerProperty}
                 deleteRows={this.deleteRows}
