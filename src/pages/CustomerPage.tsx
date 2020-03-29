@@ -11,6 +11,9 @@ import { v4 as uuid4 } from 'uuid'
 import { customer } from '@/database'
 import { screen } from '@/redux/screen/selectors'
 import { IScreen } from '@/redux/screen/types'
+import { Tooltip, IconButton, TextField } from '@material-ui/core';
+import DeleteIcon from '@material-ui/icons/Delete';
+import AddBoxIcon from '@material-ui/icons/AddBox';
 
 const headCells: HeadCell[] = [{
     propertyName: "code",
@@ -35,6 +38,7 @@ const headCells: HeadCell[] = [{
 },
 {
     propertyName: "tariffId",
+    notNull: true,
     type: Types.TARIFF,
     isArray: true,
     disableEditor: false,
@@ -199,22 +203,29 @@ const newCustomer = {
     taxCode: "Ngon",
     email: "dqkhang96@gmail.com",
     contractCode: "MK_00",
-    contractDate: "",
+    contractDate: null,
     chargeTypeId: "",
     payTypeId: "",
     environmentalProtectionFee: 10,
     bankId: "",
-    beginUse: "",
-    endUse: "",
+    beginUse: null,
+    endUse: null,
     active: true
 }
 
-class CustomersPage extends Component<Props>{
+interface State {
+    selected: string[]
+}
+class CustomersPage extends Component<Props, State>{
     constructor(props: Props) {
         super(props)
+        this.state = {
+            selected: []
+        }
         this.addCustomer = this.addCustomer.bind(this)
         this.updateCustomerProperty = this.updateCustomerProperty.bind(this)
         this.deleteRows = this.deleteRows.bind(this)
+        this.onSelect = this.onSelect.bind(this)
     }
 
     componentDidMount() {
@@ -230,8 +241,10 @@ class CustomersPage extends Component<Props>{
         })
     }
 
-    deleteRows(ids: string[]) {
+    deleteRows() {
+        const ids = this.state.selected
         this.props.deleteCustomer(ids)
+        this.setState({ selected: [] })
         customer.remove({ _id: { $in: ids } }, { multi: true }, (err, numRemoved) => {
             if (err)
                 console.log(err)
@@ -250,17 +263,40 @@ class CustomersPage extends Component<Props>{
         })
     }
 
+    onSelect(ids: string[]) {
+        this.setState({ selected: ids })
+    }
+
     render() {
         const { customers, screen } = this.props
         return (
             <EnhancedTable
+                selectToolbarColor="rgba(241, 14, 124, 0.3)"
+                selectCellColor="rgba(241, 14, 124, 0.1)"
+                selected={this.state.selected}
+                onSelect={this.onSelect}
+                selectControl={(<Tooltip title="Delete">
+                    <IconButton aria-label="delete" onClick={this.deleteRows}>
+                        <DeleteIcon />
+                    </IconButton>
+                </Tooltip>)}
+                defaultControl={(<React.Fragment>
+                    <Tooltip title="Search">
+                        <TextField id="standard-basic" label="Search" />
+                    </Tooltip>
+                    <Tooltip title="Add">
+                        <IconButton aria-label="Add" onClick={this.addCustomer}>
+                            <AddBoxIcon />
+                        </IconButton>
+                    </Tooltip>
+                </React.Fragment>
+
+                )}
                 screen={screen}
                 headCells={headCells}
                 updateProperty={this.updateCustomerProperty}
-                deleteRows={this.deleteRows}
                 rows={customers as Row[]}
                 title="Quản lý khách hàng"
-                addRow={this.addCustomer}
             />
 
         )

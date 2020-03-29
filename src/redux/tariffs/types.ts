@@ -6,5 +6,6 @@ export interface ITariff {
     taxPercel: number
     tax: number
     total: number
+    default: boolean
     active: boolean
 }

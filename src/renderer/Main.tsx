@@ -24,15 +24,19 @@ import LinearScaleIcon from '@material-ui/icons/LinearScale';
 import PeopleAltOutlinedIcon from '@material-ui/icons/PeopleAltOutlined';
 import AccountBalanceIcon from '@material-ui/icons/AccountBalance';
 import Container from '@material-ui/core/Container'
-import CustomersPage from '@/pages/CustomersPage'
+import CustomersPage from '@/pages/CustomerPage'
 import DateFnsUtils from '@date-io/date-fns';
 import { loadScreen } from '@/redux/screen/actions'
 import { loadTariffs } from '@/redux/tariffs/actions'
 import { loadCustomers } from '@/redux/customers/actions'
 import { loadGlands } from '@/redux/glands/actions'
+import { loadBanks } from '@/redux/banks/actions'
 import TariffPage from '@/pages/TariffPage'
 import GlandPage from '@/pages/GlandPage'
-import { tariff, customer, gland } from '@/database'
+import BillPage from '@/pages/BillPage'
+import BankPage from '@/pages/BankPage'
+
+import { tariff, customer, gland, bank } from '@/database'
 
 import {
   MuiPickersUtilsProvider,
@@ -108,7 +112,8 @@ const mapDispatchToProps = {
   loadScreen,
   loadTariffs,
   loadCustomers,
-  loadGlands
+  loadGlands,
+  loadBanks
 }
 
 interface PropsFromDispatch {
@@ -116,6 +121,7 @@ interface PropsFromDispatch {
   loadTariffs: typeof loadTariffs
   loadCustomers: typeof loadCustomers
   loadGlands: typeof loadGlands
+  loadBanks: typeof loadBanks
 }
 
 interface SelfProps {
@@ -124,11 +130,11 @@ interface SelfProps {
 
 type Props = PropsFromDispatch & SelfProps
 
-function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands }: Props) {
+function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands, loadBanks }: Props) {
 
 
   const [open, setOpen] = useState(false);
-  const [pageId, changePage] = useState(PageIds.CUSTOMERS)
+  const [pageId, changePage] = useState(PageIds.BILLS)
   const theme = useTheme();
   const classes = useStyles(theme);
 
@@ -150,6 +156,12 @@ function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands }: Prop
         console.log(err)
       else
         loadCustomers(customers)
+    })
+    bank.find({}, (err, banks) => {
+      if (err)
+        console.log(err)
+      else
+        loadBanks(banks)
     })
     window.addEventListener('resize', function (event: any) {
       event.preventDefault()
@@ -180,7 +192,9 @@ function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands }: Prop
       case PageIds.CUSTOMERS: return <CustomersPage />
       case PageIds.TARIFFS: return <TariffPage />
       case PageIds.GLANDS: return <GlandPage />
-      default: return <GlandPage />
+      case PageIds.BILLS: return <BillPage />
+      case PageIds.BANKS: return <BankPage />
+      default: return <BankPage />
     }
   }
 
@@ -233,7 +247,9 @@ function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands }: Prop
           {[{ label: 'Hóa đơn', pageId: PageIds.BILLS, icon: <ReceiptOutlinedIcon /> },
           { label: 'Bảng giá', pageId: PageIds.TARIFFS, icon: <LocalAtmIcon /> },
           { label: 'Tuyến', pageId: PageIds.GLANDS, icon: <LinearScaleIcon /> }].map((item, index) => (
-            <ListItem button key={item.pageId} onClick={() => handleChangePage(item.pageId)}>
+            <ListItem button key={item.pageId} onClick={() => handleChangePage(item.pageId)} style={{
+              backgroundColor: item.pageId === pageId ? "rgba(241, 14, 124, 0.2)" : "inherit"
+            }}>
               <ListItemIcon>{item.icon}</ListItemIcon>
               <ListItemText primary={item.label} />
             </ListItem>
@@ -243,7 +259,9 @@ function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands }: Prop
         <List>
           {[{ label: 'Khách hàng', pageId: PageIds.CUSTOMERS, icon: <PeopleAltOutlinedIcon /> },
           { label: 'Ngân hàng', pageId: PageIds.BANKS, icon: <AccountBalanceIcon /> }].map((item, index) => (
-            <ListItem button key={item.pageId} onClick={() => handleChangePage(item.pageId)}>
+            <ListItem button key={item.pageId} onClick={() => handleChangePage(item.pageId)} style={{
+              backgroundColor: item.pageId === pageId ? "rgba(241, 14, 124, 0.2)" : "inherit"
+            }}>
               <ListItemIcon>{item.icon}</ListItemIcon>
               <ListItemText primary={item.label} />
             </ListItem>

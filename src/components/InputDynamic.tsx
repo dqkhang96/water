@@ -1,4 +1,4 @@
-import React, { Component, useState } from 'react'
+import React, { Component, useState, useEffect } from 'react'
 import TextField from '@material-ui/core/TextField';
 import { HeadCell } from './EnhancedTable'
 import { Types } from '@/utils/types';
@@ -41,6 +41,12 @@ interface SelfProps {
     onChange: (value: any) => void
 }
 
+interface Option {
+    _id: string
+    name: string
+    default?: boolean
+}
+
 type Props = SelfProps & PropsFromState
 
 const InputDynamic = ({ headCell, value, onChange, classes, tariffs, banks, glands }: Props) => {
@@ -64,12 +70,23 @@ const InputDynamic = ({ headCell, value, onChange, classes, tariffs, banks, glan
 
     const getOptions = () => {
         switch (headCell.type) {
-            case Types.BANK: return (banks) ? (banks) : []
             case Types.TARIFF: return (tariffs) ? (tariffs) : []
+            case Types.BANK: return (banks) ? (banks) : []
             case Types.GLAND: return (glands) ? (glands) : []
             default: return []
         }
     }
+    const options: Option[] = getOptions()
+
+    useEffect(() => {
+        if ((!value) && (options.length > 0) && (headCell.notNull)) {
+            var indexOption = options.findIndex(option => option.default)
+            if (indexOption === -1)
+                indexOption = 0
+            onChange(value ? value : options[indexOption]._id)
+        }
+    })
+
     switch (headCell.type) {
         case Types.NUMBER:
             return <NumberFormat disabled={headCell.disableEditor} onValueChange={(values) =>
@@ -104,11 +121,11 @@ const InputDynamic = ({ headCell, value, onChange, classes, tariffs, banks, glan
                     format="dd-MM-yyyy"
                     margin="normal"
                     id="date-picker-inline"
-                    value={stringToDate("dd-MM-yyyy", value)}
-                    open={open}
+                    value={value}
+                    open={open && !headCell.disableEditor}
                     onClick={() => setOpen(true)}
                     onChange={(date: Date) => {
-                        onChange(dateToString("dd-MM-yyyy", date))
+                        onChange(date)
                         setOpen(false)
                     }}
                     KeyboardButtonProps={{
@@ -139,10 +156,10 @@ const InputDynamic = ({ headCell, value, onChange, classes, tariffs, banks, glan
                     onClick={() => setOpen(!open)}
                     className={classes}
                 >
-                    <MenuItem value="">
+                    {!headCell.notNull && <MenuItem value="">
                         <em>None</em>
-                    </MenuItem>
-                    {getOptions().map(option => (
+                    </MenuItem>}
+                    {options.map(option => (
                         <MenuItem value={option._id} key={option._id}>
                             <em>{option.name}</em>
                         </MenuItem>

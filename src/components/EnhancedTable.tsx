@@ -17,12 +17,7 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Paper from '@material-ui/core/Paper';
 import Checkbox from '@material-ui/core/Checkbox';
-import IconButton from '@material-ui/core/IconButton';
-import Tooltip from '@material-ui/core/Tooltip';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Switch from '@material-ui/core/Switch';
-import DeleteIcon from '@material-ui/icons/Delete';
-import FilterListIcon from '@material-ui/icons/FilterList';
+
 import { Types } from '@/utils/types';
 import TextField from '@material-ui/core/TextField';
 import { ICustomer } from '@/redux/customers/types';
@@ -32,13 +27,14 @@ import AddBoxIcon from '@material-ui/icons/AddBox';
 import InputDynamic from '@/components/InputDynamic'
 import { ITariff } from '@/redux/tariffs/types';
 import { IGland } from '@/redux/glands/types';
+import { IBank } from '@/redux/banks/types'
 import { ResizableBox } from 'react-resizable';
 import { Resizable } from 're-resizable'
 import { Box } from '@material-ui/core';
 import VerticalAlignTopSharpIcon from '@material-ui/icons/VerticalAlignTopSharp';
 import { IScreen } from '@/redux/screen/types';
 
-export type Row = (ICustomer | IBill | ITariff | IGland) & { [key: string]: string | number }
+export type Row = (ICustomer | IBill | ITariff | IGland | IBank) & { [key: string]: string | number }
 
 
 type Order = 'asc' | 'desc';
@@ -52,6 +48,7 @@ export interface HeadCell {
   type: Types
   isArray?: boolean
   sortField?: boolean
+  notNull?: boolean
 }
 
 interface EnhancedTableProps {
@@ -142,22 +139,22 @@ const useToolbarStyles = makeStyles((theme: Theme) =>
 interface EnhancedTableToolbarProps {
   numSelected: number
   title: string
-  addRow: () => void
-  deleteRows: () => void
+  selectControl: React.ReactNode
+  defaultControl: React.ReactNode
+  selectColor: string
 }
 
 const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
   const classes = useToolbarStyles();
-  const { numSelected, title, addRow, deleteRows } = props;
+  const { numSelected, title, defaultControl, selectControl, selectColor } = props;
 
   return (
     <Toolbar
-      className={clsx(classes.root, {
-        [classes.highlight]: numSelected > 0,
-      })}
+      className={clsx(classes.root)}
+      style={{ backgroundColor: numSelected > 0 ? selectColor : "inherit" }}
     >
       {numSelected > 0 ? (
-        <Typography className={classes.title} color="inherit" variant="subtitle1">
+        <Typography className={classes.title} variant="inherit">
           {numSelected} selected
         </Typography>
       ) : (
@@ -165,24 +162,7 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
             {title}
           </Typography>
         )}
-      {numSelected > 0 ? (
-        <Tooltip title="Delete">
-          <IconButton aria-label="delete" onClick={deleteRows}>
-            <DeleteIcon />
-          </IconButton>
-        </Tooltip>
-      ) : (
-          <React.Fragment>
-            <Tooltip title="Search">
-              <TextField id="standard-basic" label="Search" />
-            </Tooltip>
-            <Tooltip title="Add">
-              <IconButton aria-label="Add" onClick={addRow}>
-                <AddBoxIcon />
-              </IconButton>
-            </Tooltip>
-          </React.Fragment>
-        )}
+      {numSelected > 0 ? selectControl : defaultControl}
     </Toolbar>
   );
 };
@@ -198,6 +178,7 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     container: {
       paddingLeft: 10, paddingRight: 10,
+      width: "100%"
     },
     tableContainer: {
       paddingLeft: 0, paddingRight: 0,
@@ -207,7 +188,6 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     tableCell: {
       padding: theme.spacing(0),
-      backgroundCcolor: '#fff',
       position: 'sticky',
       top: 0,
     },
@@ -239,18 +219,21 @@ interface SelfProps {
   headCells: HeadCell[]
   title: string
   updateProperty: (id: string, fieldName: string, value: any) => void
-  deleteRows: (ids: string[]) => void
-  addRow: () => void
   screen: IScreen
+  onSelect: (selected: string[]) => void
+  selectControl: React.ReactNode
+  defaultControl: React.ReactNode
+  selected: string[]
+  selectToolbarColor: string
+  selectCellColor: string
 }
 
 type Props = SelfProps
 
-export default function EnhancedTable({ rows, headCells, title, addRow, updateProperty, deleteRows, screen }: Props) {
+export default function EnhancedTable({ rows, headCells, title, selectControl, defaultControl, updateProperty, screen, onSelect, selected, selectToolbarColor, selectCellColor }: Props) {
   const classes = useStyles();
   const [order, setOrder] = React.useState<Order>('asc');
   const [orderBy, setOrderBy] = React.useState<string>('');
-  const [selected, setSelected] = React.useState<string[]>([]);
   const [page, setPage] = React.useState(0);
   const [dense, setDense] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(25);
@@ -293,10 +276,10 @@ export default function EnhancedTable({ rows, headCells, title, addRow, updatePr
   const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
       const newSelecteds = rows.map(n => n._id);
-      setSelected(newSelecteds);
+      onSelect(newSelecteds);
       return;
     }
-    setSelected([]);
+    onSelect([]);
   };
 
   const handleClick = (event: React.MouseEvent<unknown>, _id: string) => {
@@ -315,8 +298,7 @@ export default function EnhancedTable({ rows, headCells, title, addRow, updatePr
         selected.slice(selectedIndex + 1),
       );
     }
-
-    setSelected(newSelected);
+    onSelect(newSelected)
   };
 
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -338,10 +320,7 @@ export default function EnhancedTable({ rows, headCells, title, addRow, updatePr
         marginBottom: 8, marginTop: 18
       }}>
         <Paper className={classes.paper} >
-          <EnhancedTableToolbar numSelected={selected.length} title={title} addRow={addRow} deleteRows={() => {
-            deleteRows(selected)
-            setSelected([])
-          }} />
+          <EnhancedTableToolbar selectColor={selectToolbarColor} numSelected={selected.length} title={title} selectControl={selectControl} defaultControl={defaultControl} />
         </Paper>
       </Container>
       <Container fixed className={classes.container} >
@@ -375,10 +354,12 @@ export default function EnhancedTable({ rows, headCells, title, addRow, updatePr
                       <TableRow
                         hover
                         role="checkbox"
-                        aria-checked={isItemSelected}
+                        style={{
+                          backgroundColor: isItemSelected ? selectCellColor : "inherit"
+                        }}
                         tabIndex={-1}
                         key={row._id}
-                        selected={isItemSelected}
+
                       >
                         <TableCell padding="checkbox" className={classes.tableCell}>
                           <Checkbox
@@ -387,9 +368,6 @@ export default function EnhancedTable({ rows, headCells, title, addRow, updatePr
                             inputProps={{ 'aria-labelledby': labelId }}
                           />
                         </TableCell>
-                        {/* <TableCell component="th" id={labelId} scope="row" padding="none">
-                          {index}
-                        </TableCell> */}
                         {headCells.map((cel, _) => (
                           <TableCell key={`${cel.propertyName}-${row._id}`} component="td" id={labelId}
                             scope="row" padding={cel.type === Types.BOOLEAN ? "checkbox" : "default"} className={classes.tableCell}>

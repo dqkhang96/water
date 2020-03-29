@@ -10,6 +10,9 @@ import { tariff } from '@/database'
 import { v4 as uuid4 } from 'uuid'
 import { screen } from '@/redux/screen/selectors'
 import { IScreen } from '@/redux/screen/types'
+import { Tooltip, IconButton, TextField } from '@material-ui/core';
+import DeleteIcon from '@material-ui/icons/Delete';
+import AddBoxIcon from '@material-ui/icons/AddBox';
 
 const headCells: HeadCell[] = [{
     propertyName: "name",
@@ -54,6 +57,13 @@ const headCells: HeadCell[] = [{
     label: "Tổng tiền"
 },
 {
+    propertyName: "default",
+    type: Types.BOOLEAN,
+    disableEditor: false,
+    disablePadding: false,
+    label: "Mặc định"
+},
+{
     propertyName: "active",
     type: Types.BOOLEAN,
     disableEditor: false,
@@ -94,6 +104,9 @@ interface SelfProps {
 
 type Props = SelfProps & PropsFromState & PropsFromDispatch
 
+interface State {
+    selected: string[]
+}
 
 const newTariff: ITariff = {
     _id: uuid4(),
@@ -103,15 +116,20 @@ const newTariff: ITariff = {
     taxPercel: 0,
     tax: 0,
     total: 0,
-    active: true
+    active: true,
+    default: false
 }
-class TariffPage extends Component<Props>{
+class TariffPage extends Component<Props, State>{
 
     constructor(props: Props) {
         super(props)
+        this.state = {
+            selected: []
+        }
         this.updateProperty = this.updateProperty.bind(this)
         this.addTariff = this.addTariff.bind(this)
         this.deleteRows = this.deleteRows.bind(this)
+        this.onSelect = this.onSelect.bind(this)
     }
 
     componentDidMount() {
@@ -127,9 +145,15 @@ class TariffPage extends Component<Props>{
         })
     }
 
-    deleteRows(ids: string[]) {
+    onSelect(ids: string[]) {
+        this.setState({ selected: ids })
+    }
+
+    deleteRows() {
+        const ids = this.state.selected
         this.props.deleteTariff(ids)
-        tariff.remove({ _id: { $in: ids } }, (err, numRemoved) => {
+        this.setState({ selected: [] })
+        tariff.remove({ _id: { $in: ids } }, { multi: true }, (err, numRemoved) => {
             if (err)
                 console.log(err)
             else console.log(`Delete ${numRemoved} tariff(s)!`)
@@ -151,8 +175,13 @@ class TariffPage extends Component<Props>{
                 newData['tax'] = tax
                 newData['total'] = total
             }
-
         }
+        if ((property === "default")) {
+            tariff.update({ $not: { _id: id } }, { $set: { default: false } }, { multi: true }, (err, numReplaced) => {
+            })
+            this.props.tariffs.forEach((tariff) => tariff._id !== id && this.props.updateTariffProperty(tariff._id, property, false))
+        }
+
         this.props.updateTariffProperty(id, property, value)
 
         newData[property] = value
@@ -168,12 +197,33 @@ class TariffPage extends Component<Props>{
         var { tariffs, screen } = this.props
         return (
             <EnhancedTable screen={screen}
+                selectToolbarColor="rgba(241, 14, 124, 0.3)"
+                selectCellColor="rgba(241, 14, 124, 0.1)"
                 headCells={headCells}
+                selected={this.state.selected}
+                onSelect={this.onSelect}
+                selectControl={(<Tooltip title="Delete">
+                    <IconButton aria-label="delete" onClick={this.deleteRows}>
+                        <DeleteIcon />
+                    </IconButton>
+                </Tooltip>)}
+                defaultControl={(<React.Fragment>
+                    <Tooltip title="Search">
+                        <TextField id="standard-basic" label="Search" />
+                    </Tooltip>
+                    <Tooltip title="Add">
+                        <IconButton aria-label="Add" onClick={this.addTariff}>
+                            <AddBoxIcon />
+                        </IconButton>
+                    </Tooltip>
+                </React.Fragment>
+
+                )}
                 updateProperty={this.updateProperty}
-                deleteRows={this.deleteRows}
+
                 rows={tariffs as Row[]}
-                title="Quản lý khách hàng"
-                addRow={this.addTariff}
+                title="Bảng giá"
+
             />
         )
     }
