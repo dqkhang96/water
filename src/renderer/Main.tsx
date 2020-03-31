@@ -104,6 +104,7 @@ const useStyles = makeStyles(theme => ({
   },
   content: {
     flexGrow: 1,
+    width:"80%",
     padding: theme.spacing(3),
   },
 }));
@@ -220,7 +221,7 @@ function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands, loadBa
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap>
-            Duong gay
+            Quản lý nước sinh hoạt
           </Typography>
         </Toolbar>
       </AppBar>

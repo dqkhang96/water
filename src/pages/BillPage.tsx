@@ -155,27 +155,27 @@ const headCells: HeadCell[] = [
         disablePadding: false,
         label: "Tuyến"
     },
-    {
-        propertyName: "period",
-        type: Types.NUMBER,
-        disableEditor: false,
-        disablePadding: false,
-        label: "Số kì"
-    },
-    {
-        propertyName: "numberOfHouseholds",
-        type: Types.NUMBER,
-        disableEditor: false,
-        disablePadding: false,
-        label: "Số hộ"
-    },
-    {
-        propertyName: "numberOfPeople",
-        type: Types.NUMBER,
-        disableEditor: false,
-        disablePadding: false,
-        label: "Số NK"
-    },
+    // {
+    //     propertyName: "period",
+    //     type: Types.NUMBER,
+    //     disableEditor: false,
+    //     disablePadding: false,
+    //     label: "Số kì"
+    // },
+    // {
+    //     propertyName: "numberOfHouseholds",
+    //     type: Types.NUMBER,
+    //     disableEditor: false,
+    //     disablePadding: false,
+    //     label: "Số hộ"
+    // },
+    // {
+    //     propertyName: "numberOfPeople",
+    //     type: Types.NUMBER,
+    //     disableEditor: false,
+    //     disablePadding: false,
+    //     label: "Số NK"
+    // },
     {
         propertyName: "feeNumber",
         type: Types.NUMBER,
@@ -197,20 +197,20 @@ const headCells: HeadCell[] = [
         disablePadding: false,
         label: "Ngày hoá đơn"
     },
-    {
-        propertyName: "frontDate",
-        type: Types.DATETIME,
-        disableEditor: true,
-        disablePadding: false,
-        label: "Từ ngày"
-    },
-    {
-        propertyName: "toDate",
-        type: Types.DATETIME,
-        disableEditor: true,
-        disablePadding: false,
-        label: "Đến ngày"
-    },
+    // {
+    //     propertyName: "fromDate",
+    //     type: Types.DATETIME,
+    //     disableEditor: true,
+    //     disablePadding: false,
+    //     label: "Từ ngày"
+    // },
+    // {
+    //     propertyName: "toDate",
+    //     type: Types.DATETIME,
+    //     disableEditor: true,
+    //     disablePadding: false,
+    //     label: "Đến ngày"
+    // },
     {
         propertyName: "numberPrint",
         type: Types.NUMBER,
@@ -299,8 +299,6 @@ const ChangeTime = ({ rangerTime, changeRangerDate }: ChangeTimeProps) => {
         <div className={classes.changeTime}>
             <Fab size="small" color="primary" aria-label="pre" onClick={() => {
                 var date = new Date(fromDate.getFullYear(), fromDate.getMonth() - 1);
-                if (fromDate.getMonth() === 1)
-                    date = new Date(fromDate.getFullYear() - 1, 12)
                 changeRangerDate({
                     fromDate: new Date(date.getFullYear(), date.getMonth(), 1),
                     toDate: new Date(date.getFullYear(), date.getMonth() + 1, 0)
@@ -309,14 +307,11 @@ const ChangeTime = ({ rangerTime, changeRangerDate }: ChangeTimeProps) => {
                 <FastRewindIcon fontSize="small" />
             </Fab>
             <Typography className={classes.changeTimeLabel} variant="inherit">
-                {`${rangerTime.fromDate.getMonth()} - ${rangerTime.fromDate.getFullYear()}`}
+                {`${rangerTime.fromDate.getMonth()+1} - ${rangerTime.fromDate.getFullYear()}`}
             </Typography>
             <Fab size="small" color="primary" aria-label="next" onClick={() => {
                 var date = new Date(fromDate.getFullYear(), fromDate.getMonth() + 1);
-                if (fromDate.getMonth() === 12)
-                    date = new Date(fromDate.getFullYear() + 1, 1)
-
-
+            
                 changeRangerDate({
                     fromDate: new Date(date.getFullYear(), date.getMonth(), 1),
                     toDate: new Date(date.getFullYear(), date.getMonth() + 1, 0)

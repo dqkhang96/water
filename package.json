@@ -1,7 +1,7 @@
 {
-  "name": "electron-react-typescript-webpack-boilerplate",
+  "name": "water",
   "version": "2.0.2",
-  "description": "Pre-configured boilerplate for Electron + React + TypeScript",
+  "description": "Quản lý tiền nước",
   "main": "./dist/main.bundle.js",
   "scripts": {
     "start": "electron ./dist/main.bundle.js",
@@ -12,8 +12,8 @@
     "build:mac": "electron-builder build --mac --x64"
   },
   "build": {
-    "appId": "com.devtography.electron_boilerplate",
-    "productName": "Electron+React+TypeScript Boilerplate",
+    "appId": "com.khang-devsamurai.alone",
+    "productName": "Water",
     "directories": {
       "app": "./dist/",
       "output": "./out/"
@@ -27,7 +27,7 @@
     },
     "buildVersion": "1.0.0"
   },
-  "author": "Wing Chau @Devtography",
+  "author": "Đinh Quang Khang",
   "license": "MIT",
   "dependencies": {
     "@material-ui/core": "^4.9.7",
