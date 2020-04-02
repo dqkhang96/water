@@ -19,17 +19,21 @@ export interface IBill {
     payTypeId: string
     tariffId: string
     glandId: string
+    customerCode: string
+    customerName?: string
+    customerAddress?: string
     numberOfHouseholds: number
     numberOfPeople: number
     period: number
     numberBill: number
-    dateBill: string
-    frontDate: Date | null
+    dateBill: Date
+    fromDate: Date | null
     toDate: Date | null
     numberPrint?: number
     note?: string
     feeNumber: number
     isStored: boolean
+
 }
 
 export type Bill = IBill | { [key: string]: any }

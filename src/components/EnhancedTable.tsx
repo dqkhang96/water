@@ -18,7 +18,7 @@ import Typography from '@material-ui/core/Typography';
 import Paper from '@material-ui/core/Paper';
 import Checkbox from '@material-ui/core/Checkbox';
 
-import { Types } from '@/utils/types';
+import { Types, TableTypes } from '@/utils/types';
 import TextField from '@material-ui/core/TextField';
 import { ICustomer } from '@/redux/customers/types';
 import { IBill } from '@/redux/bills/types';
@@ -34,7 +34,7 @@ import { Box } from '@material-ui/core';
 import VerticalAlignTopSharpIcon from '@material-ui/icons/VerticalAlignTopSharp';
 import { IScreen } from '@/redux/screen/types';
 
-export type Row = (ICustomer | IBill | ITariff | IGland | IBank) & { [key: string]: string | number }
+export type Row = (ICustomer | IBill | ITariff | IGland | IBank) & { [key: string]: string | number | [] }
 
 
 type Order = 'asc' | 'desc';
@@ -43,12 +43,14 @@ type Order = 'asc' | 'desc';
 export interface HeadCell {
   disablePadding: boolean
   disableEditor: boolean
+  hide?: boolean
   propertyName: string
   label: string
   type: Types
   isArray?: boolean
   sortField?: boolean
   notNull?: boolean
+  width?: number
 }
 
 interface EnhancedTableProps {
@@ -94,6 +96,7 @@ function EnhancedTableHead(props: EnhancedTableProps) {
             >
               <TableSortLabel
                 className={classes.tableLabel}
+                style={{ minWidth: headCell.width ? headCell.width : 200 }}
                 active={orderBy === headCell.propertyName}
                 direction={orderBy === headCell.propertyName ? order : 'asc'}
                 onClick={createSortHandler(headCell.propertyName)}
@@ -184,12 +187,13 @@ const useStyles = makeStyles((theme: Theme) =>
       paddingLeft: 0, paddingRight: 0,
     },
     table: {
-
+      display: "block"
     },
     tableCell: {
       padding: theme.spacing(0),
-      position: 'sticky',
       top: 0,
+      whiteSpace: "normal",
+      wordWrap: "break-word"
     },
     tableLabel: {
       whiteSpace: 'nowrap', minWidth: 200, textAlign: "center"
@@ -226,11 +230,12 @@ interface SelfProps {
   selected: string[]
   selectToolbarColor: string
   selectCellColor: string
+  tableType: TableTypes
 }
 
 type Props = SelfProps
 
-export default function EnhancedTable({ rows, headCells, title, selectControl, defaultControl, updateProperty, screen, onSelect, selected, selectToolbarColor, selectCellColor }: Props) {
+export default function EnhancedTable({ rows, headCells, title, selectControl, defaultControl, updateProperty, screen, onSelect, selected, tableType, selectToolbarColor, selectCellColor }: Props) {
   const classes = useStyles();
   const [order, setOrder] = React.useState<Order>('asc');
   const [orderBy, setOrderBy] = React.useState<string>('');
@@ -355,7 +360,7 @@ export default function EnhancedTable({ rows, headCells, title, selectControl, d
                         hover
                         role="checkbox"
                         style={{
-                          backgroundColor: isItemSelected ? selectCellColor : "inherit"
+                          backgroundColor: isItemSelected ? selectCellColor : "inherit",
                         }}
                         tabIndex={-1}
                         key={row._id}
@@ -370,8 +375,8 @@ export default function EnhancedTable({ rows, headCells, title, selectControl, d
                         </TableCell>
                         {headCells.map((cel, _) => (
                           <TableCell key={`${cel.propertyName}-${row._id}`} component="td" id={labelId}
-                            scope="row" padding={cel.type === Types.BOOLEAN ? "checkbox" : "default"} className={classes.tableCell}>
-                            <InputDynamic classes={classes.input} onChange={(value) => updateProperty(row._id, cel.propertyName, value)} headCell={cel} value={row[cel.propertyName]} />
+                            scope="row" padding={cel.type === Types.BOOLEAN ? "checkbox" : "none"} className={classes.tableCell}>
+                            <InputDynamic tableType={tableType} row={row} classes={classes.input} onChange={(value) => updateProperty(row._id, cel.propertyName, value)} headCell={cel} value={row[cel.propertyName]} />
                           </TableCell>
                         ))}
                       </TableRow>

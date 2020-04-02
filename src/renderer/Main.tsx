@@ -104,7 +104,7 @@ const useStyles = makeStyles(theme => ({
   },
   content: {
     flexGrow: 1,
-    width:"80%",
+    width: "80%",
     padding: theme.spacing(3),
   },
 }));
@@ -246,8 +246,7 @@ function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands, loadBa
         <Divider />
         <List>
           {[{ label: 'Hóa đơn', pageId: PageIds.BILLS, icon: <ReceiptOutlinedIcon /> },
-          { label: 'Bảng giá', pageId: PageIds.TARIFFS, icon: <LocalAtmIcon /> },
-          { label: 'Tuyến', pageId: PageIds.GLANDS, icon: <LinearScaleIcon /> }].map((item, index) => (
+          { label: 'Bảng giá', pageId: PageIds.TARIFFS, icon: <LocalAtmIcon /> }].map((item, index) => (
             <ListItem button key={item.pageId} onClick={() => handleChangePage(item.pageId)} style={{
               backgroundColor: item.pageId === pageId ? "rgba(241, 14, 124, 0.2)" : "inherit"
             }}>
@@ -259,6 +258,7 @@ function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands, loadBa
         <Divider />
         <List>
           {[{ label: 'Khách hàng', pageId: PageIds.CUSTOMERS, icon: <PeopleAltOutlinedIcon /> },
+          { label: 'Tuyến', pageId: PageIds.GLANDS, icon: <LinearScaleIcon /> },
           { label: 'Ngân hàng', pageId: PageIds.BANKS, icon: <AccountBalanceIcon /> }].map((item, index) => (
             <ListItem button key={item.pageId} onClick={() => handleChangePage(item.pageId)} style={{
               backgroundColor: item.pageId === pageId ? "rgba(241, 14, 124, 0.2)" : "inherit"

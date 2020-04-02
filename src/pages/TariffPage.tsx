@@ -1,10 +1,10 @@
 import React, { Component } from 'react'
 import { addTariff, deleteTariff, loadTariffs, updateTariffProperty } from '@/redux/tariffs/actions'
 import { tariffs } from '@/redux/tariffs/selectors'
-import { ITariff } from '@/redux/tariffs/types'
+import { ITariff, TypeOfPrice, RangePrice } from '@/redux/tariffs/types'
 import { AppState } from '@/redux'
 import EnhancedTable, { HeadCell, Row } from '@/components/EnhancedTable'
-import { Types } from '@/utils/types'
+import { Types, TableTypes } from '@/utils/types'
 import { connect } from 'react-redux'
 import { tariff } from '@/database'
 import { v4 as uuid4 } from 'uuid'
@@ -13,6 +13,11 @@ import { IScreen } from '@/redux/screen/types'
 import { Tooltip, IconButton, TextField } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
 import AddBoxIcon from '@material-ui/icons/AddBox';
+import { WIDTH_SEARCH_BAR } from '@/utils/constant'
+import Chip from '@material-ui/core/Chip';
+import lodash from 'lodash'
+import Autocomplete from '@material-ui/lab/Autocomplete';
+import { SearchOption } from '@/utils/types'
 
 const headCells: HeadCell[] = [{
     propertyName: "name",
@@ -27,6 +32,22 @@ const headCells: HeadCell[] = [{
     disableEditor: false,
     disablePadding: false,
     label: "Tên viết tắt"
+},
+{
+    propertyName: "typeOfPrice",
+    type: Types.TYPE_OF_PRICE,
+    disableEditor: false,
+    disablePadding: false,
+    label: "Cách tính phí"
+},
+{
+    propertyName: "rangePrices",
+    type: Types.RANGE_PRICES,
+    width: 400,
+    hide: true,
+    disableEditor: false,
+    disablePadding: false,
+    label: "Bảng luỹ tuyến"
 },
 {
     propertyName: "unit",
@@ -72,8 +93,6 @@ const headCells: HeadCell[] = [{
 },
 ]
 
-
-
 interface PropsFromDispatch {
     addTariff: typeof addTariff
     deleteTariff: typeof deleteTariff
@@ -106,6 +125,9 @@ type Props = SelfProps & PropsFromState & PropsFromDispatch
 
 interface State {
     selected: string[]
+    headCells: HeadCell[]
+    searchOptions: SearchOption[]
+    searchOptionSelecteds: SearchOption[]
 }
 
 const newTariff: ITariff = {
@@ -113,9 +135,11 @@ const newTariff: ITariff = {
     code: "NEW",
     name: "Bảng giá mới",
     unit: 0,
-    taxPercel: 0,
+    taxPercel: 10,
     tax: 0,
     total: 0,
+    typeOfPrice: TypeOfPrice.FIXED,
+    rangePrices: [],
     active: true,
     default: false
 }
@@ -124,16 +148,48 @@ class TariffPage extends Component<Props, State>{
     constructor(props: Props) {
         super(props)
         this.state = {
-            selected: []
+            selected: [],
+            headCells: [...headCells],
+            searchOptions: [],
+            searchOptionSelecteds: []
         }
         this.updateProperty = this.updateProperty.bind(this)
         this.addTariff = this.addTariff.bind(this)
         this.deleteRows = this.deleteRows.bind(this)
         this.onSelect = this.onSelect.bind(this)
+        this.searchBar = this.searchBar.bind(this)
+        this.loadSearchOptions = this.loadSearchOptions.bind(this)
     }
 
-    componentDidMount() {
 
+
+    componentDidMount() {
+        this.loadSearchOptions()
+    }
+
+    loadSearchOptions(props?: Props) {
+        const { tariffs } = props ? props : this.props
+        var searchOptions: SearchOption[] = []
+        searchOptions = searchOptions.concat([{ key: "Luỹ tuyến", id: TypeOfPrice.DIVISION, property: "typeOfPrice" }, { key: "Tĩnh", id: TypeOfPrice.FIXED, property: "typeOfPrice" }])
+        const properties: string[] = ["code", "name"]
+        properties.forEach((property: string) => {
+            var pros: SearchOption[] = tariffs.map((tariff: any) => {
+                return {
+                    property,
+                    id: tariff._id,
+                    key: tariff[property]
+                }
+            })
+            var newProps: SearchOption[] = []
+            pros.forEach((pr: SearchOption) => {
+                if ((pr.key !== null) && (newProps.findIndex((npr) => npr.key === pr.key) === -1))
+                    newProps.push(pr)
+            })
+            searchOptions = searchOptions.concat(newProps)
+        })
+
+
+        this.setState({ searchOptions })
     }
 
     addTariff() {
@@ -160,7 +216,9 @@ class TariffPage extends Component<Props, State>{
         })
     }
 
+
     updateProperty(id: string, property: string, value: any) {
+        var newHeadCells = [...this.state.headCells]
         var newData: { [key: string]: any } = {}
         if ((property === 'unit') || (property == 'taxPercel')) {
             const tariff = this.props.tariffs.find(tariff => tariff._id === id)
@@ -169,7 +227,6 @@ class TariffPage extends Component<Props, State>{
                 const unit = (property === 'unit' ? value : tariff.unit)
                 const tax = Math.round(unit * taxPercel / 100)
                 const total = Math.round(unit * (taxPercel / 100 + 1))
-                console.log(tax, total)
                 this.props.updateTariffProperty(id, 'tax', tax)
                 this.props.updateTariffProperty(id, 'total', total)
                 newData['tax'] = tax
@@ -192,11 +249,49 @@ class TariffPage extends Component<Props, State>{
         })
     }
 
+    searchBar() {
+        const { searchOptions } = this.state
+        return (
+            <Tooltip title="Search">
+                <Autocomplete
+                    multiple
+                    id="tags-standard"
+                    options={searchOptions}
+                    getOptionLabel={(option) => option.key}
+                    renderTags={(value, getTagProps) =>
+                        value.map((option, index) => (
+                            <Chip label={option.key} {...getTagProps({ index })} />
+                        ))
+                    }
+                    filterSelectedOptions
+                    style={{ width: WIDTH_SEARCH_BAR }}
+                    renderInput={(params) => (
+                        <TextField {...params} label="Từ khoá" variant="standard" placeholder="Tìm bảng giá" />
+                    )}
+                    onChange={(event, searchOptionSelecteds: SearchOption[]) => {
+                        this.setState({ searchOptionSelecteds })
+                    }}
+                />
+            </Tooltip>)
+    }
 
     render() {
         var { tariffs, screen } = this.props
+        var tariffShows = tariffs.filter((tariff: any) => {
+            var ok = true
+            const groupOptions = lodash.groupBy(this.state.searchOptionSelecteds, "property")
+            for (let key in groupOptions) {
+                if (key === "typeOfPrice")
+                    ok = groupOptions.typeOfPrice.findIndex((option: SearchOption) => option.id === tariff.typeOfPrice) > -1
+                else
+                    ok = (groupOptions[key].findIndex((option: SearchOption) => option.key === tariff[key])) > -1
+                if (!ok) break;
+            }
+            return ok
+        })
         return (
             <EnhancedTable screen={screen}
+                tableType={TableTypes.TARIFF}
                 selectToolbarColor="rgba(241, 14, 124, 0.3)"
                 selectCellColor="rgba(241, 14, 124, 0.1)"
                 headCells={headCells}
@@ -208,10 +303,8 @@ class TariffPage extends Component<Props, State>{
                     </IconButton>
                 </Tooltip>)}
                 defaultControl={(<React.Fragment>
-                    <Tooltip title="Search">
-                        <TextField id="standard-basic" label="Search" />
-                    </Tooltip>
-                    <Tooltip title="Add">
+                    {this.searchBar()}
+                    <Tooltip title="Thêm bảng giá">
                         <IconButton aria-label="Add" onClick={this.addTariff}>
                             <AddBoxIcon />
                         </IconButton>
@@ -221,7 +314,7 @@ class TariffPage extends Component<Props, State>{
                 )}
                 updateProperty={this.updateProperty}
 
-                rows={tariffs as Row[]}
+                rows={tariffShows as Row[]}
                 title="Bảng giá"
 
             />

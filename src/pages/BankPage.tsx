@@ -4,7 +4,7 @@ import { banks } from '@/redux/banks/selectors'
 import { IBank } from '@/redux/banks/types'
 import { AppState } from '@/redux'
 import EnhancedTable, { HeadCell, Row } from '@/components/EnhancedTable'
-import { Types } from '@/utils/types'
+import { Types, TableTypes } from '@/utils/types'
 import { connect } from 'react-redux'
 import { bank } from '@/database'
 import { v4 as uuid4 } from 'uuid'
@@ -13,6 +13,11 @@ import { IScreen } from '@/redux/screen/types'
 import { Tooltip, IconButton, TextField } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
 import AddBoxIcon from '@material-ui/icons/AddBox';
+import Chip from '@material-ui/core/Chip';
+import lodash from 'lodash'
+import Autocomplete from '@material-ui/lab/Autocomplete';
+import { SearchOption } from '@/utils/types'
+import { WIDTH_SEARCH_BAR } from '@/utils/constant'
 
 const headCells: HeadCell[] = [
     {
@@ -91,6 +96,8 @@ type Props = SelfProps & PropsFromState & PropsFromDispatch
 
 interface State {
     selected: string[]
+    searchOptions: SearchOption[]
+    searchOptionSelecteds: SearchOption[]
 }
 
 const newBank: IBank = {
@@ -107,16 +114,43 @@ class BankPage extends Component<Props, State>{
     constructor(props: Props) {
         super(props)
         this.state = {
-            selected: []
+            selected: [],
+            searchOptions: [],
+            searchOptionSelecteds: []
         }
         this.updateProperty = this.updateProperty.bind(this)
         this.addBank = this.addBank.bind(this)
         this.deleteRows = this.deleteRows.bind(this)
         this.onSelect = this.onSelect.bind(this)
+        this.loadSearchOptions = this.loadSearchOptions.bind(this)
     }
 
     componentDidMount() {
+        this.loadSearchOptions()
+    }
 
+    loadSearchOptions(props?: Props) {
+        const { banks } = props ? props : this.props
+        var searchOptions: SearchOption[] = []
+        const properties: string[] = ["code", "name", "address"]
+        properties.forEach((property: string) => {
+            var pros: SearchOption[] = banks.map((bank: any) => {
+                return {
+                    property,
+                    id: bank._id,
+                    key: bank[property]
+                }
+            })
+            var newProps: SearchOption[] = []
+            pros.forEach((pr: SearchOption) => {
+                if ((pr.key !== null) && (newProps.findIndex((npr) => npr.key === pr.key) === -1))
+                    newProps.push(pr)
+            })
+            searchOptions = searchOptions.concat(newProps)
+        })
+
+
+        this.setState({ searchOptions })
     }
 
     addBank() {
@@ -156,12 +190,49 @@ class BankPage extends Component<Props, State>{
         })
     }
 
+    searchBar() {
+        const { searchOptions } = this.state
+        return (
+            <Tooltip title="Search">
+                <Autocomplete
+                    multiple
+                    id="tags-standard"
+                    options={searchOptions}
+                    getOptionLabel={(option) => option.key}
+                    renderTags={(value, getTagProps) =>
+                        value.map((option, index) => (
+                            <Chip label={option.key} {...getTagProps({ index })} />
+                        ))
+                    }
+                    filterSelectedOptions
+                    style={{ width: WIDTH_SEARCH_BAR }}
+                    renderInput={(params) => (
+                        <TextField {...params} label="Từ khoá" variant="standard" placeholder="Tìm ngân hàng" />
+                    )}
+                    onChange={(event, searchOptionSelecteds: SearchOption[]) => {
+                        this.setState({ searchOptionSelecteds })
+                    }}
+                />
+            </Tooltip>)
+    }
 
 
     render() {
         var { banks, screen } = this.props
+        const { searchOptionSelecteds } = this.state
+        var bankShows = banks.filter((bank: any) => {
+            var ok = true
+            const groupOptions = lodash.groupBy(searchOptionSelecteds, "property")
+            for (let key in groupOptions) {
+                ok = !!(groupOptions[key].find((option: SearchOption) => option.key === bank[key]))
+                if (!ok) break;
+            }
+            return ok
+        })
         return (
-            <EnhancedTable screen={screen}
+            <EnhancedTable
+                tableType={TableTypes.BANK}
+                screen={screen}
                 selectToolbarColor="rgba(241, 14, 124, 0.3)"
                 selectCellColor="rgba(241, 14, 124, 0.1)"
                 headCells={headCells}
@@ -175,9 +246,7 @@ class BankPage extends Component<Props, State>{
                     </Tooltip>
                 )}
                 defaultControl={(<React.Fragment>
-                    <Tooltip title="Search">
-                        <TextField id="standard-basic" label="Search" />
-                    </Tooltip>
+                    {this.searchBar()}
                     <Tooltip title="Add">
                         <IconButton aria-label="Add" onClick={this.addBank}>
                             <AddBoxIcon />
@@ -188,7 +257,7 @@ class BankPage extends Component<Props, State>{
                 )}
                 updateProperty={this.updateProperty}
 
-                rows={banks as Row[]}
+                rows={bankShows as Row[]}
                 title="Bảng giá"
 
             />

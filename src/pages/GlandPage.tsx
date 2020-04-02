@@ -4,7 +4,7 @@ import { glands } from '@/redux/glands/selectors'
 import { IGland } from '@/redux/glands/types'
 import { AppState } from '@/redux'
 import EnhancedTable, { HeadCell, Row } from '@/components/EnhancedTable'
-import { Types } from '@/utils/types'
+import { Types, TableTypes } from '@/utils/types'
 import { connect } from 'react-redux'
 import { gland } from '@/database'
 import { v4 as uuid4 } from 'uuid'
@@ -13,6 +13,11 @@ import { IScreen } from '@/redux/screen/types'
 import { Tooltip, IconButton, TextField } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
 import AddBoxIcon from '@material-ui/icons/AddBox';
+import { WIDTH_SEARCH_BAR } from '@/utils/constant'
+import Chip from '@material-ui/core/Chip';
+import lodash from 'lodash'
+import Autocomplete from '@material-ui/lab/Autocomplete';
+import { SearchOption } from '@/utils/types'
 
 
 const headCells: HeadCell[] = [
@@ -95,6 +100,8 @@ const newGland: IGland = {
 
 interface State {
     selected: string[]
+    searchOptions: SearchOption[]
+    searchOptionSelecteds: SearchOption[]
 }
 
 class GlandPage extends Component<Props, State>{
@@ -102,17 +109,44 @@ class GlandPage extends Component<Props, State>{
     constructor(props: Props) {
         super(props)
         this.state = {
-            selected: []
+            selected: [],
+            searchOptions: [],
+            searchOptionSelecteds: []
         }
         this.updateProperty = this.updateProperty.bind(this)
         this.addGland = this.addGland.bind(this)
         this.deleteRows = this.deleteRows.bind(this)
         this.onSelect = this.onSelect.bind(this)
+        this.loadSearchOptions = this.loadSearchOptions.bind(this)
     }
 
     componentDidMount() {
-
+        this.loadSearchOptions()
     }
+
+    loadSearchOptions(props?: Props) {
+        const { glands } = props ? props : this.props
+        var searchOptions: SearchOption[] = []
+        const properties: string[] = ["code", "curator", "name", "curator", "zone"]
+        properties.forEach((property: string) => {
+            var pros: SearchOption[] = glands.map((gland: any) => {
+                return {
+                    property,
+                    id: gland._id,
+                    key: gland[property]
+                }
+            })
+            var newProps: SearchOption[] = []
+            pros.forEach((pr: SearchOption) => {
+                if ((pr.key !== null) && (newProps.findIndex((npr) => npr.key === pr.key) === -1))
+                    newProps.push(pr)
+            })
+            searchOptions = searchOptions.concat(newProps)
+        })
+
+        this.setState({ searchOptions })
+    }
+
 
     onSelect(ids: string[]) {
         this.setState({ selected: ids })
@@ -151,11 +185,47 @@ class GlandPage extends Component<Props, State>{
         })
     }
 
+    searchBar() {
+        const { searchOptions } = this.state
+        return (
+            <Tooltip title="Search">
+                <Autocomplete
+                    multiple
+                    id="tags-standard"
+                    options={searchOptions}
+                    getOptionLabel={(option) => option.key}
+                    renderTags={(value, getTagProps) =>
+                        value.map((option, index) => (
+                            <Chip label={option.key} {...getTagProps({ index })} />
+                        ))
+                    }
+                    filterSelectedOptions
+                    style={{ width: WIDTH_SEARCH_BAR }}
+                    renderInput={(params) => (
+                        <TextField {...params} label="Từ khoá" variant="standard" placeholder="Tìm tuyến" />
+                    )}
+                    onChange={(event, searchOptionSelecteds: SearchOption[]) => {
+                        this.setState({ searchOptionSelecteds })
+                    }}
+                />
+            </Tooltip>)
+    }
 
     render() {
         var { glands, screen } = this.props
+        const { searchOptionSelecteds } = this.state
+        var glandsShow = glands.filter((gland: any) => {
+            var ok = true
+            const groupOptions = lodash.groupBy(searchOptionSelecteds, "property")
+            for (let key in groupOptions) {
+                ok = !!(groupOptions[key].find((option: SearchOption) => option.key === gland[key]))
+                if (!ok) break;
+            }
+            return ok
+        })
         return (
             <EnhancedTable screen={screen}
+                tableType={TableTypes.GLAND}
                 selectToolbarColor="rgba(241, 14, 124, 0.3)"
                 selectCellColor="rgba(241, 14, 124, 0.1)"
                 headCells={headCells}
@@ -167,9 +237,7 @@ class GlandPage extends Component<Props, State>{
                     </IconButton>
                 </Tooltip>)}
                 defaultControl={(<React.Fragment>
-                    <Tooltip title="Search">
-                        <TextField id="standard-basic" label="Search" />
-                    </Tooltip>
+                    {this.searchBar()}
                     <Tooltip title="Add">
                         <IconButton aria-label="Add" onClick={this.addGland}>
                             <AddBoxIcon />
@@ -179,7 +247,7 @@ class GlandPage extends Component<Props, State>{
                 )}
                 updateProperty={this.updateProperty}
 
-                rows={glands as Row[]}
+                rows={glandsShow as Row[]}
                 title="Tuyến"
 
             />

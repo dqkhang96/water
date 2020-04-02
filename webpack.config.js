@@ -1,6 +1,8 @@
 const lodash = require('lodash');
 const CopyPkgJsonPlugin = require('copy-pkg-json-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+
 const path = require('path');
 
 function srcPaths(src) {
@@ -65,6 +67,17 @@ mainConfig.plugins = [
   }),
 ];
 
+const templatesConfig = lodash.cloneDeep(commonConfig);
+templatesConfig.entry = './';
+templatesConfig.plugins = [
+  new CopyWebpackPlugin([
+    {
+      from: 'templates',
+      to: 'templates'
+    }
+  ])
+];
+
 const rendererConfig = lodash.cloneDeep(commonConfig);
 rendererConfig.entry = './src/renderer/renderer.tsx';
 rendererConfig.target = 'electron-renderer';
@@ -75,4 +88,4 @@ rendererConfig.plugins = [
   }),
 ];
 
-module.exports = [mainConfig, rendererConfig];
+module.exports = [templatesConfig, mainConfig, rendererConfig];

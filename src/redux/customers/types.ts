@@ -11,6 +11,9 @@ export interface ICustomer {
     phoneNumber: string
     taxCode: string
     email: string
+    customerType: CustomerType
+    owner: string
+    rentAddress: string
     contractCode: string
     contractDate: Date | null
     chargeTypeId: string
@@ -20,4 +23,9 @@ export interface ICustomer {
     beginUse: Date | null
     endUse: Date | null
     active: boolean
+}
+
+export enum CustomerType {
+    ENTERPRISE,
+    PERSONAL
 }
