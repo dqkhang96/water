@@ -72,8 +72,8 @@ templatesConfig.entry = './';
 templatesConfig.plugins = [
   new CopyWebpackPlugin([
     {
-      from: 'templates',
-      to: 'templates'
+      from: 'assets',
+      to: 'assets'
     }
   ])
 ];

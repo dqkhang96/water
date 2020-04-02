@@ -3,7 +3,8 @@ export enum PageIds {
     CUSTOMERS,
     BANKS,
     GLANDS,
-    TARIFFS
+    TARIFFS,
+    SETTING
 }
 
 export enum Types {

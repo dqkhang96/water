@@ -31,18 +31,21 @@ import { loadTariffs } from '@/redux/tariffs/actions'
 import { loadCustomers } from '@/redux/customers/actions'
 import { loadGlands } from '@/redux/glands/actions'
 import { loadBanks } from '@/redux/banks/actions'
+import { loadSetting } from '@/redux/setting/actions'
 import TariffPage from '@/pages/TariffPage'
 import GlandPage from '@/pages/GlandPage'
 import BillPage from '@/pages/BillPage'
 import BankPage from '@/pages/BankPage'
+import SettingsIcon from '@material-ui/icons/Settings';
 
-import { tariff, customer, gland, bank } from '@/database'
+import { tariff, customer, gland, bank, setting } from '@/database'
 
 import {
   MuiPickersUtilsProvider,
 } from '@material-ui/pickers';
 
 import { connect } from 'react-redux';
+import SettingPage from '@/pages/SettingPage';
 
 const drawerWidth = 240;
 
@@ -114,7 +117,8 @@ const mapDispatchToProps = {
   loadTariffs,
   loadCustomers,
   loadGlands,
-  loadBanks
+  loadBanks,
+  loadSetting
 }
 
 interface PropsFromDispatch {
@@ -122,7 +126,8 @@ interface PropsFromDispatch {
   loadTariffs: typeof loadTariffs
   loadCustomers: typeof loadCustomers
   loadGlands: typeof loadGlands
-  loadBanks: typeof loadBanks
+  loadBanks: typeof loadBanks,
+  loadSetting: typeof loadSetting
 }
 
 interface SelfProps {
@@ -131,7 +136,7 @@ interface SelfProps {
 
 type Props = PropsFromDispatch & SelfProps
 
-function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands, loadBanks }: Props) {
+function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands, loadBanks, loadSetting }: Props) {
 
 
   const [open, setOpen] = useState(false);
@@ -164,6 +169,13 @@ function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands, loadBa
       else
         loadBanks(banks)
     })
+    setting.find({}).sort({ timeUpdate: -1 }).limit(1).exec((err, settings) => {
+      if (err)
+        console.log(err)
+      else
+        if (settings.length > 0)
+          loadSetting(settings[0])
+    })
     window.addEventListener('resize', function (event: any) {
       event.preventDefault()
       if (event.srcElement !== null) {
@@ -195,6 +207,7 @@ function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands, loadBa
       case PageIds.GLANDS: return <GlandPage />
       case PageIds.BILLS: return <BillPage />
       case PageIds.BANKS: return <BankPage />
+      case PageIds.SETTING: return <SettingPage />
       default: return <BankPage />
     }
   }
@@ -260,6 +273,17 @@ function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands, loadBa
           {[{ label: 'Khách hàng', pageId: PageIds.CUSTOMERS, icon: <PeopleAltOutlinedIcon /> },
           { label: 'Tuyến', pageId: PageIds.GLANDS, icon: <LinearScaleIcon /> },
           { label: 'Ngân hàng', pageId: PageIds.BANKS, icon: <AccountBalanceIcon /> }].map((item, index) => (
+            <ListItem button key={item.pageId} onClick={() => handleChangePage(item.pageId)} style={{
+              backgroundColor: item.pageId === pageId ? "rgba(241, 14, 124, 0.2)" : "inherit"
+            }}>
+              <ListItemIcon>{item.icon}</ListItemIcon>
+              <ListItemText primary={item.label} />
+            </ListItem>
+          ))}
+        </List>
+        <Divider />
+        <List>
+          {[{ label: 'Cài đặt', pageId: PageIds.SETTING, icon: <SettingsIcon /> }].map((item, index) => (
             <ListItem button key={item.pageId} onClick={() => handleChangePage(item.pageId)} style={{
               backgroundColor: item.pageId === pageId ? "rgba(241, 14, 124, 0.2)" : "inherit"
             }}>

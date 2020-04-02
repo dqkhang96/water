@@ -15,6 +15,8 @@ import { v4 as uuid4 } from 'uuid'
 import lodash from 'lodash'
 import { customer } from '@/database'
 import { screen } from '@/redux/screen/selectors'
+import { setting } from '@/redux/setting/selectors'
+import { ISetting } from '@/redux/setting/types'
 import { IScreen } from '@/redux/screen/types'
 import { bill as billDb } from '@/database'
 import { Tooltip, IconButton, TextField } from '@material-ui/core';
@@ -267,7 +269,8 @@ const mapStateToProps = (state: AppState) => ({
     customers: customers(state),
     screen: screen(state),
     tariffs: tariffs(state),
-    glands: glands(state)
+    glands: glands(state),
+    setting: setting(state)
 })
 
 interface SelfProps {
@@ -283,6 +286,7 @@ interface PropsFromState {
     tariffs: ITariff[]
     screen: IScreen
     glands: IGland[]
+    setting: ISetting
 }
 
 type Props = SelfProps & PropsFromState & PropsFromDispatch
@@ -294,12 +298,10 @@ enum SaveStatus {
 }
 interface State {
     selected: string[]
-    showBills: Bill[]
     bills: Bill[]
-    fromDate: Date
-    toDate: Date
+    month: Date
     searchOptions: SearchOption[]
-    searchOptionSeleceds: SearchOption[]
+    searchOptionSelecteds: SearchOption[]
     openSaveDoc: boolean
     saveStatus: SaveStatus
 
@@ -324,40 +326,43 @@ const useStyles = makeStyles((theme: Theme) =>
     }),
 );
 
-interface RangerTime {
-    fromDate: Date, toDate: Date
+const getDaysInMonth = (month: number, year: number): number => {
+    // Here January is 1 based
+    //Day 0 is the last day in the previous month
+    return new Date(year, month + 1, 0).getDate();
 }
+
+const getRangeBillDate = (month: Date, dateBill: number): { fromDate: Date, toDate: Date } => {
+    var fromDate = new Date(month.getFullYear(), month.getMonth() - 1, 0)
+    var numberDays: number = getDaysInMonth(fromDate.getMonth(), fromDate.getFullYear())
+    fromDate = new Date(month.getFullYear(), month.getMonth() - 1, numberDays > dateBill ? dateBill : numberDays)
+
+    var toDate = new Date(month.getFullYear(), month.getMonth(), 0)
+    numberDays = getDaysInMonth(toDate.getMonth(), toDate.getFullYear())
+    toDate = new Date(month.getFullYear(), month.getMonth(), numberDays > dateBill ? dateBill : numberDays)
+    return { fromDate, toDate }
+}
+
 interface ChangeTimeProps {
-    rangerTime: RangerTime,
-    changeRangerDate: (rangerDate: RangerTime) => void
+    month: Date,
+    changeMonth: (month: Date) => void
 }
 
-const ChangeTime = ({ rangerTime, changeRangerDate }: ChangeTimeProps) => {
+const ChangeTime = ({ changeMonth, month }: ChangeTimeProps) => {
     const classes = useStyles();
-    const { fromDate, toDate } = rangerTime
-
-
     return (
         <div className={classes.changeTime}>
             <Fab size="small" color="primary" aria-label="pre" onClick={() => {
-                var date = new Date(fromDate.getFullYear(), fromDate.getMonth() - 1);
-                changeRangerDate({
-                    fromDate: new Date(date.getFullYear(), date.getMonth(), 1),
-                    toDate: new Date(date.getFullYear(), date.getMonth() + 1, 0)
-                })
+                changeMonth(new Date(month.getFullYear(), month.getMonth() - 1))
             }}>
                 <FastRewindIcon fontSize="small" />
             </Fab>
             <Typography className={classes.changeTimeLabel} variant="inherit">
-                {`${rangerTime.fromDate.getMonth() + 1} - ${rangerTime.fromDate.getFullYear()}`}
+                {`${month.getMonth() + 1} - ${month.getFullYear()}`}
             </Typography>
             <Fab size="small" color="primary" aria-label="next" onClick={() => {
-                var date = new Date(fromDate.getFullYear(), fromDate.getMonth() + 1);
 
-                changeRangerDate({
-                    fromDate: new Date(date.getFullYear(), date.getMonth(), 1),
-                    toDate: new Date(date.getFullYear(), date.getMonth() + 1, 0)
-                })
+                changeMonth(new Date(month.getFullYear(), month.getMonth() + 1))
             }}>
                 <FastForwardIcon fontSize="small" />
             </Fab>
@@ -370,15 +375,13 @@ class BillPage extends Component<Props, State>{
 
     constructor(props: Props) {
         super(props)
-        var date = new Date();
+        const date = new Date()
         this.state = {
             selected: [],
             bills: [],
             searchOptions: [],
-            searchOptionSeleceds: [],
-            fromDate: new Date(date.getFullYear(), date.getMonth(), 1),
-            toDate: new Date(date.getFullYear(), date.getMonth() + 1, 0),
-            showBills: [],
+            searchOptionSelecteds: [],
+            month: new Date(date.getFullYear(), date.getMonth()),
             saveStatus: SaveStatus.NONE,
             openSaveDoc: false
         }
@@ -391,16 +394,23 @@ class BillPage extends Component<Props, State>{
         this.printBills = this.printBills.bind(this)
     }
 
+    componentDidMount() {
+        this.loadData()
+    }
+
     componentWillReceiveProps(nextProps: Props) {
-        const { glands, customers } = nextProps
+        const { customers } = nextProps
         if ((customers.length > 0))
             this.loadData(nextProps)
     }
 
     loadData(props?: Props) {
-        const { fromDate, toDate } = this.state
-        const { customers, glands } = props ? props : this.props
+
+        const { month } = this.state
+        const { customers, glands, setting } = props ? props : this.props
         const that = this
+
+        const { fromDate, toDate } = getRangeBillDate(month, setting.dateBill)
         billDb.find({}).sort({ numberBill: -1 }).limit(1).exec(function (err, docs) {
             var maxNumberBill: number
             if (docs.length > 0)
@@ -409,8 +419,8 @@ class BillPage extends Component<Props, State>{
             const lastFromDate = new Date(fromDate.getTime()), lastToDate = new Date(toDate.getTime())
             lastFromDate.setMonth(lastFromDate.getMonth() - 1)
             lastToDate.setMonth(lastToDate.getMonth() - 1)
-            billDb.find({ $and: [{ dateBill: { $gte: lastFromDate } }, { dateBill: { $lte: lastToDate } }] }).exec((err, lastBills) => {
-                billDb.find({ $and: [{ dateBill: { $gte: fromDate } }, { dateBill: { $lte: toDate } }] }).exec((err, bills) => {
+            billDb.find({ month: new Date(month.getFullYear(), month.getMonth() - 1) }).exec((err, lastBills) => {
+                billDb.find({ month }).exec((err, bills) => {
 
                     const newBills: Bill[] = customers.map((customer, index) => {
                         const bill: Bill | undefined = bills.find((doc) => doc.customerId === customer._id)
@@ -419,13 +429,17 @@ class BillPage extends Component<Props, State>{
                             return {
                                 ...bill,
                                 isStored: true,
-                                index: index + 1
+                                index: index + 1,
+                                customerCode: customer.code,
+                                customerName: customer.name,
+                                customerAddress: customer.address
                             }
                         maxNumberBill += 1
                         const newBill: Bill = {
                             _id: uuid4(),
                             taxCode: customer.taxCode,
                             index: index + 1,
+                            month,
                             customerCode: customer.code,
                             customerId: customer._id,
                             customerName: customer.name,
@@ -434,12 +448,12 @@ class BillPage extends Component<Props, State>{
                             tariffId: customer.tariffId,
                             glandId: customer.glandId,
                             period: 1,
-                            numberBegin: lastBill ? lastBill.numberEnd : null,
+                            numberBegin: lastBill ? lastBill.numberEnd ? lastBill.numberEnd : null : null,
                             numberOfHouseholds: customer.numberOfHouseholds,
                             numberOfPeople: customer.numberOfPeople,
                             feeNumber: 10,
                             numberBill: maxNumberBill,
-                            dateBill: fromDate,
+                            dateBill: new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate() + 1),
                             datePay: null,
                             fromDate,
                             toDate,
@@ -477,7 +491,7 @@ class BillPage extends Component<Props, State>{
                         })
                         searchOptions = searchOptions.concat(newProps)
                     })
-                    that.setState({ searchOptions, bills: newBills, showBills: newBills, selected: newBills.map((bill) => bill._id) })
+                    that.setState({ searchOptions, bills: newBills, selected: newBills.map((bill) => bill._id) })
                 })
             })
 
@@ -486,43 +500,54 @@ class BillPage extends Component<Props, State>{
 
     }
 
-    componentDidMount() {
-        this.loadData(this.props)
-    }
-
-
-
     delete() {
+        const { remote } = require('electron')
+        let options = {
+            buttons: ["Không", "Có"],
+            message: "Bạn muốn xoá hoá đơn?"
+        }
+        if (remote.dialog.showMessageBox(options) === 0)
+            return;
         const ids = this.state.selected
-        const { fromDate, toDate, bills } = this.state
+        const { bills, month } = this.state
+        const { fromDate, toDate } = getRangeBillDate(month, this.props.setting.dateBill)
 
-        billDb.remove({ $and: [{ dateBill: { $gte: fromDate } }, { dateBill: { $lte: toDate } }, { _id: { $in: ids } }] }, { multi: true }, (err, numRemoved) => {
+        billDb.remove({ _id: { $in: ids } }, { multi: true }, (err, numRemoved) => {
             if (err)
                 console.log(err)
             else console.log(`Delete ${numRemoved} bill(s)!`)
         })
 
-        const newBills = bills.map((bill: Bill) => {
-            if (ids.indexOf(bill._id) === -1)
-                return bill
-            else return {
-                ...bill,
-                isStored: false,
-                numberBegin: null,
-                numberEnd: null,
-                consume: null,
-                beforeTax: null,
-                tax: null,
-                fee: null,
-                total: null,
-                payed: null,
-                rest: null, datePay: null,
-                historyPay: [],
-                dateBill: fromDate,
-                numberPrint: 0
-            }
+        billDb.find({ month: new Date(month.getFullYear(), month.getMonth() - 1) }).exec((err, lastBills) => {
+            const newBills = bills.map((bill: Bill) => {
+
+                if (ids.indexOf(bill._id) === -1)
+                    return bill
+                const lastBill: Bill | undefined = lastBills.find((doc) => doc.customerId === bill.customerId)
+
+                return {
+                    ...bill,
+                    isStored: false,
+                    numberBegin: lastBill ? lastBill.numberEnd ? lastBill.numberEnd : null : null,
+                    numberEnd: null,
+                    month,
+                    consume: null,
+                    beforeTax: null,
+                    tax: null,
+                    fee: null,
+                    total: null,
+                    payed: null,
+                    rest: null, datePay: null,
+                    historyPay: [],
+                    dateBill: new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate() + 1),
+                    numberPrint: 0,
+                    fromDate,
+                    toDate
+                }
+            })
+            this.setState({ bills: newBills })
         })
-        this.setState({ bills: newBills })
+
     }
 
     onSelect(ids: string[]) {
@@ -539,11 +564,10 @@ class BillPage extends Component<Props, State>{
 
     updateProperty(id: string, property: string, value: any) {
         const that = this
-        const { tariffs } = this.props
-        const { bills, fromDate } = this.state
+        const { bills } = this.state
         const updateBillProperty = (lastId: string, bill: any, property: string, value: any) => {
+            bill[property] = value
             if ((property === "numberBegin") || (property == "numberEnd") || (property === "tariffId") || (property === "feeNumber")) {
-                bill[property] = value
                 that.updateBill(lastId, bill)
             } else
                 if (property === "payed") {
@@ -574,7 +598,6 @@ class BillPage extends Component<Props, State>{
             }
             else {
                 bill.isStored = true
-                bill.dateBill = fromDate
                 billDb.insert(bill, (err, newBill) => {
                     updateBillProperty(id, newBill, property, value)
                 })
@@ -583,9 +606,23 @@ class BillPage extends Component<Props, State>{
     }
 
     printBills() {
-        const { selected, bills } = this.state
-        const { customers } = this.props
-        const billsPrinted = bills.filter((bill) => selected.indexOf(bill._id) > -1)
+        const { selected, bills, searchOptionSelecteds } = this.state
+        const { customers, setting } = this.props
+        const billsPrinted = bills.filter((bill: any) => {
+            var ok = selected.indexOf(bill._id) > -1
+            if (!ok)
+                return false
+            const groupOptions = lodash.groupBy(searchOptionSelecteds, "property")
+            for (let key in groupOptions) {
+                if (key === "glandId")
+                    ok = !!groupOptions.glandId.find((option: SearchOption) => option.id === bill.glandId)
+                else
+                    ok = !!(groupOptions[key].find((option: SearchOption) => option.key === bill[key]))
+                if (!ok) break;
+            }
+            return ok
+
+        })
         const { remote } = require('electron')
 
         var pathFolder = remote.dialog.showOpenDialog({
@@ -599,7 +636,7 @@ class BillPage extends Component<Props, State>{
 
         this.setState({ openSaveDoc: true })
         var content = fs
-            .readFileSync(path.join(__dirname, '/templates/bill_template.docx'), 'binary');
+            .readFileSync(path.join(__dirname, 'assets/templates/bill_template.docx'), 'binary');
 
         var zip = new PizZip(content);
         var doc: any;
@@ -631,7 +668,8 @@ class BillPage extends Component<Props, State>{
                 numberBeginFormat: formatNumber(bill.numberBegin),
                 numberEndFormat: formatNumber(bill.numberEnd),
                 consumeFormat: formatNumber(bill.consume),
-                moneyToString: `${docso(bill.total)} đồng.`
+                moneyToString: `${docso(bill.total)} đồng.`,
+                nameInBill: setting.nameInBill
 
             }
             //set the templateVariables
@@ -680,18 +718,7 @@ class BillPage extends Component<Props, State>{
                     )}
                     onChange={(event, searchOptionSelecteds: SearchOption[]) => {
                         this.setState({
-                            showBills: bills.filter((bill: any) => {
-                                var ok = true
-                                const groupOptions = lodash.groupBy(searchOptionSelecteds, "property")
-                                for (let key in groupOptions) {
-                                    if (key === "glandId")
-                                        ok = !!groupOptions.glandId.find((option: SearchOption) => option.id === bill.glandId)
-                                    else
-                                        ok = !!(groupOptions[key].find((option: SearchOption) => option.key === bill[key]))
-                                    if (!ok) break;
-                                }
-                                return ok
-                            })
+                            searchOptionSelecteds
                         })
                     }}
                 />
@@ -699,9 +726,23 @@ class BillPage extends Component<Props, State>{
     }
 
     render() {
-        const { screen, tariffs } = this.props
-        var { showBills, selected, fromDate, toDate, openSaveDoc, saveStatus } = this.state
-        const bills = showBills.map((bill) => {
+        const { screen, tariffs, setting } = this.props
+        var { bills, selected, month, openSaveDoc, saveStatus, searchOptionSelecteds } = this.state
+        var showBills = bills.filter((bill: any) => {
+            var ok = true
+            const groupOptions = lodash.groupBy(searchOptionSelecteds, "property")
+            for (let key in groupOptions) {
+                if (key === "glandId")
+                    ok = !!groupOptions.glandId.find((option: SearchOption) => option.id === bill.glandId)
+                else
+                    ok = !!(groupOptions[key].find((option: SearchOption) => option.key === bill[key]))
+                if (!ok) break;
+            }
+            return ok
+        })
+
+
+        showBills = showBills.map((bill) => {
             const tariff = tariffs.find((tariff) => tariff._id === bill.tariffId)
             const numberBegin: number = bill.numberBegin
             const numberEnd: number = bill.numberEnd
@@ -761,8 +802,8 @@ class BillPage extends Component<Props, State>{
                                 </span >
                                 <SaveAltIcon />
                             </Button>
-                            <ChangeTime rangerTime={{ fromDate, toDate }} changeRangerDate={(range: RangerTime) => {
-                                this.setState({ fromDate: range.fromDate, toDate: range.toDate }, this.loadData)
+                            <ChangeTime month={month} changeMonth={(month: Date) => {
+                                this.setState({ month }, this.loadData)
                             }} />
                             {this.searchBar()}
                             <Tooltip title={`Xoá ${selected.length} hoá đơn`}>
@@ -775,8 +816,8 @@ class BillPage extends Component<Props, State>{
 
                     defaultControl={(
                         <React.Fragment>
-                            <ChangeTime rangerTime={{ fromDate, toDate }} changeRangerDate={(range: RangerTime) => {
-                                this.setState({ fromDate: range.fromDate, toDate: range.toDate }, this.loadData)
+                            <ChangeTime month={month} changeMonth={(month: Date) => {
+                                this.setState({ month }, this.loadData)
                             }} />
                             {this.searchBar()}
                         </React.Fragment>
@@ -784,7 +825,7 @@ class BillPage extends Component<Props, State>{
                     )}
                     headCells={headCells}
                     updateProperty={this.updateProperty}
-                    rows={bills as Row[]}
+                    rows={showBills as Row[]}
                     title="Hoá đơn"
                 />
             </div>

@@ -20,6 +20,7 @@ export interface IBill {
     tariffId: string
     glandId: string
     customerCode: string
+    month: Date
     customerName?: string
     customerAddress?: string
     numberOfHouseholds: number

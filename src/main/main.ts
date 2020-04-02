@@ -12,6 +12,7 @@ function createWindow(): void {
     mainWindow = new BrowserWindow({
         height: 600,
         width: 800,
+        icon: path.join(__dirname, 'assets/icons/logo.png'),
         webPreferences: {
             webSecurity: false,
             devTools: process.env.NODE_ENV === 'production' ? false : true

@@ -162,6 +162,13 @@ class GlandPage extends Component<Props, State>{
     }
 
     deleteRows() {
+        const { remote } = require('electron')
+        let options = {
+            buttons: ["Không", "Có"],
+            message: "Bạn muốn xoá tuyến?"
+        }
+        if (remote.dialog.showMessageBox(options) === 0)
+            return;
         const ids = this.state.selected
         this.props.deleteGland(ids)
         this.setState({ selected: [] })

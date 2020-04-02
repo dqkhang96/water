@@ -4,6 +4,7 @@ import { Bill } from '@/redux/bills/types'
 import { ITariff } from '@/redux/tariffs/types'
 import { IGland } from '@/redux/glands/types'
 import { IBank } from '@/redux/banks/types'
+import { ISetting } from '@/redux/setting/types'
 
 export const customer = new Datastore<ICustomer>('stores/customer.duongbinh')
 customer.loadDatabase(err => err && console.log(err))
@@ -20,11 +21,15 @@ gland.loadDatabase(err => err && console.log(err))
 export const bank = new Datastore<IBank>('stores/bank.duongbinh')
 bank.loadDatabase(err => err && console.log(err))
 
+export const setting = new Datastore<ISetting>('stores/setting.duongbinh')
+setting.loadDatabase(err => err && console.log(err))
+
 
 const db = {
     customer,
     bill,
     gland,
-    bank
+    bank,
+    setting
 }
 export default db
