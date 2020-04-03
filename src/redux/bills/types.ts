@@ -49,5 +49,6 @@ export interface IPayType {
     _id: string
     name: string
     code: string
+    default:boolean
     active: boolean
 }

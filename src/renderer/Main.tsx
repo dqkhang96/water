@@ -196,12 +196,14 @@ function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands, loadBa
             name: "Tiền mặt",
             code: "TM",
             active: true,
+            default:true
           },
           {
             _id: uuid4(),
             name: "Chuyển khoản",
             code: "CK",
-            active: true
+            active: true,
+            default:false
           }]
           payType.insert(payTypes, (err, payTypes) => {
             loadPayTypes(payTypes)

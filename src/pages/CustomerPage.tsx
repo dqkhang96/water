@@ -8,7 +8,7 @@ import { addCustomer } from '@/redux/customers/actions'
 import { AppState } from '@/redux';
 import { connect } from 'react-redux';
 import { v4 as uuid4 } from 'uuid'
-import { customer } from '@/database'
+import { customer, payType } from '@/database'
 import { screen } from '@/redux/screen/selectors'
 import { IScreen } from '@/redux/screen/types'
 import { Tooltip, IconButton, TextField } from '@material-ui/core';
@@ -17,6 +17,10 @@ import AddBoxIcon from '@material-ui/icons/AddBox';
 import { WIDTH_SEARCH_BAR } from '@/utils/constant';
 import { glands } from '@/redux/glands/selectors'
 import { IGland } from '@/redux/glands/types'
+import {ITariff} from '@/redux/tariffs/types'
+import {IPayType} from '@/redux/bills/types'
+import {tariffs} from '@/redux/tariffs/selectors'
+import {payTypes} from '@/redux/bills/selectors'
 import Chip from '@material-ui/core/Chip';
 import lodash from 'lodash'
 import Autocomplete from '@material-ui/lab/Autocomplete';
@@ -197,7 +201,9 @@ const mapDispatchToProps = {
 const mapStateToProps = (state: AppState) => ({
     customers: customers(state),
     screen: screen(state),
-    glands: glands(state)
+    glands: glands(state),
+    tariffs:tariffs(state),
+    payTypes:payTypes(state)
 })
 
 interface SelfProps {
@@ -215,6 +221,8 @@ interface PropsFromState {
     customers: ICustomer[]
     screen: IScreen
     glands: IGland[]
+    payTypes:IPayType[]
+    tariffs:ITariff[]
 }
 
 type Props = SelfProps & PropsFromState & PropsFromDispatch
@@ -305,8 +313,11 @@ class CustomersPage extends Component<Props, State>{
         this.setState({ searchOptions })
     }
 
-    addCustomer() {
-        customer.insert({ ...newCustomer, _id: uuid4() }, (err, customer) => {
+    addCustomer() { 
+        const tariffDefault=this.props.tariffs.find((tariff)=>tariff.default)
+        const payTypeDefault=this.props.payTypes.find((payType)=>payType.default)
+        customer.insert({ ...newCustomer,payTypeId:payTypeDefault?payTypeDefault._id:"",
+        tariffId:tariffDefault?tariffDefault._id:"", _id: uuid4() }, (err, customer) => {
             if (err)
                 console.log(err)
             else

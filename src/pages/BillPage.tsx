@@ -418,7 +418,7 @@ class BillPage extends Component<Props, State>{
     loadData(props?: Props) {
 
         const { month } = this.state
-        const { customers, glands, setting } = props ? props : this.props
+        const { customers, glands, setting ,tariffs,payTypes} = props ? props : this.props
         const that = this
 
         const { fromDate, toDate } = getRangeBillDate(month, setting.dateBill)
@@ -443,6 +443,8 @@ class BillPage extends Component<Props, State>{
                                 customerAddress: customer.address
                             }
                         maxNumberBill += 1
+                        const tariffDefault=tariffs.find((tariff)=>tariff.default)
+                        const payTypeDefault=payTypes.find((payType)=>payType.default)
                         const newBill: Bill = {
                             _id: uuid4(),
                             taxCode: customer.taxCode,
@@ -452,9 +454,9 @@ class BillPage extends Component<Props, State>{
                             customerId: customer._id,
                             customerName: customer.name,
                             customerAddress: customer.address,
-                            payTypeId: customer.payTypeId,
+                            payTypeId: customer.payTypeId?customer.payTypeId:payTypeDefault?payTypeDefault._id:"",
                             waterMeterCode: customer.waterMeterCode,
-                            tariffId: customer.tariffId,
+                            tariffId: customer.tariffId?customer.tariffId:tariffDefault?tariffDefault._id:"",
                             glandId: customer.glandId,
                             period: 1,
                             numberBegin: lastBill ? lastBill.numberEnd ? lastBill.numberEnd : null : null,
@@ -671,9 +673,14 @@ class BillPage extends Component<Props, State>{
 
         var numberFiles = billsPrinted.length
         billsPrinted.forEach((bill: Bill, index: number) => {
-            const tariff = tariffs.find((tariff: ITariff) => tariff._id === bill.tariffId)
+            var tariff = tariffs.find((tariff: ITariff) => tariff._id === bill.tariffId)
             const customer = customers.find((customer) => customer._id === bill.customerId)
-            const payType = payTypes.find((payType) => payType._id === bill.payTypeId)
+            var payType = payTypes.find((payType) => payType._id === bill.payTypeId)
+            if(!tariff)
+            tariff=tariffs.find((tariff)=>tariff.default)
+            if(!payType)
+            payType=payTypes.find((payType)=>payType.default)
+
             if ((!customer) || (!tariff) || (!payType))
                 return;
             var rangePrices: any[] = tariff.rangePrices

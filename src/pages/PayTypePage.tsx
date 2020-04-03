@@ -45,6 +45,14 @@ const headCells: HeadCell[] = [
         width: 250
     },
     {
+        propertyName: "default",
+        type: Types.BOOLEAN,
+        disableEditor: false,
+        disablePadding: false,
+        label: "Mặc định",
+        width: 80
+    },
+    {
         propertyName: "active",
         type: Types.BOOLEAN,
         disableEditor: false,
@@ -87,6 +95,7 @@ const newPayType: IPayType = {
     _id: uuid4(),
     code: "NEW",
     name: "Phương thức thanh toán",
+    default:false,
     active: true
 }
 
@@ -176,6 +185,12 @@ class PayTypePage extends Component<Props, State>{
 
         this.props.updatePayTypeProperty(id, property, value)
 
+        if ((property === "default")) {
+            payType.update({ $not: { _id: id } }, { $set: { default: false } }, { multi: true }, (err, numReplaced) => {
+            })
+            this.props.payTypes.forEach((payType) => payType._id !== id && this.props.updatePayTypeProperty(payType._id, property, false))
+        }
+        
         newData[property] = value
         payType.update({ _id: id }, { $set: newData }, {}, (err, numReplaced) => {
             if (err)
