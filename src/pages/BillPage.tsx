@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import EnhancedTable, { HeadCell, Row } from '@/components/EnhancedTable';
 import { customers } from '@/redux/customers/selectors'
 import { updateBillProperty } from '@/redux/bills/actions'
-import { IBill, Bill } from '@/redux/bills/types'
+import { IBill, Bill, IPayType } from '@/redux/bills/types'
 import { IGland } from '@/redux/glands/types'
 import { Types, TableTypes } from '@/utils/types';
 import { ICustomer, CustomerType } from '@/redux/customers/types';
@@ -16,7 +16,9 @@ import lodash from 'lodash'
 import { customer } from '@/database'
 import { screen } from '@/redux/screen/selectors'
 import { setting } from '@/redux/setting/selectors'
+import { payTypes } from '@/redux/bills/selectors'
 import { ISetting } from '@/redux/setting/types'
+
 import { IScreen } from '@/redux/screen/types'
 import { bill as billDb } from '@/database'
 import { Tooltip, IconButton, TextField } from '@material-ui/core';
@@ -34,10 +36,11 @@ import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import { WIDTH_SEARCH_BAR } from '@/utils/constant';
 import Button from '@material-ui/core/Button';
 import SaveAltIcon from '@material-ui/icons/SaveAlt';
-import { docso, formatNumber, dateToString } from '@/utils';
+import { docso, formatNumber, dateToString, numberBillCode } from '@/utils';
 import { SearchOption } from '@/utils/types'
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert, { AlertProps } from '@material-ui/lab/Alert';
+import ReceiptIcon from '@material-ui/icons/Receipt';
 
 function Alert(props: AlertProps) {
     return <MuiAlert elevation={6} variant="filled" {...props} />;
@@ -170,13 +173,14 @@ const headCells: HeadCell[] = [
         disablePadding: false,
         label: "Ngày TT"
     },
-    // {
-    //     propertyName: "payTypeId",
-    //     type: Types.PAY_TYPE,
-    //     disableEditor: true,
-    //     disablePadding: false,
-    //     label: "HT T.Toán"
-    // },
+    {
+        propertyName: "payTypeId",
+        type: Types.PAY_TYPE,
+        notNull: true,
+        disableEditor: false,
+        disablePadding: false,
+        label: "HT thanh toán"
+    },
     {
         propertyName: "rest",
         width: 180,
@@ -230,20 +234,20 @@ const headCells: HeadCell[] = [
         disablePadding: false,
         label: "Ngày hoá đơn"
     },
-    // {
-    //     propertyName: "fromDate",
-    //     type: Types.DATETIME,
-    //     disableEditor: true,
-    //     disablePadding: false,
-    //     label: "Từ ngày"
-    // },
-    // {
-    //     propertyName: "toDate",
-    //     type: Types.DATETIME,
-    //     disableEditor: true,
-    //     disablePadding: false,
-    //     label: "Đến ngày"
-    // },
+    {
+        propertyName: "fromDate",
+        type: Types.DATETIME,
+        disableEditor: false,
+        disablePadding: false,
+        label: "Từ ngày"
+    },
+    {
+        propertyName: "toDate",
+        type: Types.DATETIME,
+        disableEditor: false,
+        disablePadding: false,
+        label: "Đến ngày"
+    },
     {
         propertyName: "numberPrint",
         type: Types.NUMBER,
@@ -270,7 +274,8 @@ const mapStateToProps = (state: AppState) => ({
     screen: screen(state),
     tariffs: tariffs(state),
     glands: glands(state),
-    setting: setting(state)
+    setting: setting(state),
+    payTypes: payTypes(state)
 })
 
 interface SelfProps {
@@ -287,6 +292,7 @@ interface PropsFromState {
     screen: IScreen
     glands: IGland[]
     setting: ISetting
+    payTypes: IPayType[]
 }
 
 type Props = SelfProps & PropsFromState & PropsFromDispatch
@@ -371,6 +377,11 @@ const ChangeTime = ({ changeMonth, month }: ChangeTimeProps) => {
 
 }
 
+enum TypeOfFile {
+    BILL,
+    RECEIPTS
+}
+
 class BillPage extends Component<Props, State>{
 
     constructor(props: Props) {
@@ -391,7 +402,7 @@ class BillPage extends Component<Props, State>{
         this.onSelect = this.onSelect.bind(this)
         this.updateBill = this.updateBill.bind(this)
         this.searchBar = this.searchBar.bind(this)
-        this.printBills = this.printBills.bind(this)
+        this.exportFile = this.exportFile.bind(this)
     }
 
     componentDidMount() {
@@ -416,9 +427,6 @@ class BillPage extends Component<Props, State>{
             if (docs.length > 0)
                 maxNumberBill = docs[0].numberBill + 1
 
-            const lastFromDate = new Date(fromDate.getTime()), lastToDate = new Date(toDate.getTime())
-            lastFromDate.setMonth(lastFromDate.getMonth() - 1)
-            lastToDate.setMonth(lastToDate.getMonth() - 1)
             billDb.find({ month: new Date(month.getFullYear(), month.getMonth() - 1) }).exec((err, lastBills) => {
                 billDb.find({ month }).exec((err, bills) => {
 
@@ -444,6 +452,7 @@ class BillPage extends Component<Props, State>{
                             customerId: customer._id,
                             customerName: customer.name,
                             customerAddress: customer.address,
+                            payTypeId: customer.payTypeId,
                             waterMeterCode: customer.waterMeterCode,
                             tariffId: customer.tariffId,
                             glandId: customer.glandId,
@@ -605,9 +614,9 @@ class BillPage extends Component<Props, State>{
 
     }
 
-    printBills() {
+    exportFile(typeOfFile: TypeOfFile) {
         const { selected, bills, searchOptionSelecteds } = this.state
-        const { customers, setting } = this.props
+        const { customers, setting, tariffs, payTypes } = this.props
         const billsPrinted = bills.filter((bill: any) => {
             var ok = selected.indexOf(bill._id) > -1
             if (!ok)
@@ -634,10 +643,16 @@ class BillPage extends Component<Props, State>{
         var path = require('path')
         //Or asynchronous - using callback
 
-        this.setState({ openSaveDoc: true })
-        var content = fs
-            .readFileSync(path.join(__dirname, 'assets/templates/bill_template.docx'), 'binary');
 
+        var hasError = false
+        var content;
+        this.setState({ openSaveDoc: true })
+        try {
+            content = fs.readFileSync(path.join(__dirname, `assets/templates/${typeOfFile === TypeOfFile.RECEIPTS ? 'receipts_template_3.docx' : 'bill_template.docx'}`), 'binary');
+        } catch (err) {
+            console.log(err)
+            hasError = true
+        }
         var zip = new PizZip(content);
         var doc: any;
         try {
@@ -645,33 +660,68 @@ class BillPage extends Component<Props, State>{
         } catch (error) {
             // Catch compilation errors (errors caused by the compilation of the template : misplaced tags)
             console.log(error)
+            hasError = true
+        }
+
+        if (hasError) {
+            this.setState({ saveStatus: SaveStatus.FAIL, openSaveDoc: false })
+            return;
         }
 
 
         var numberFiles = billsPrinted.length
         billsPrinted.forEach((bill: Bill, index: number) => {
+            const tariff = tariffs.find((tariff: ITariff) => tariff._id === bill.tariffId)
             const customer = customers.find((customer) => customer._id === bill.customerId)
-            if (!customer)
+            const payType = payTypes.find((payType) => payType._id === bill.payTypeId)
+            if ((!customer) || (!tariff) || (!payType))
                 return;
+            var rangePrices: any[] = tariff.rangePrices
+            if (tariff.typeOfPrice === TypeOfPrice.DIVISION)
+                rangePrices = tariff.rangePrices.map((rp) => ({
+                    to: rp.to,
+                    unitFormat: formatNumber(rp.unit)
+                }))
+
             const dataDoc = {
                 ...bill,
+                contractCode: customer.contractCode,
                 dateBillToString: dateToString("#dd #MM #yyyy", bill.dateBill),
                 rangeDate: ((bill.fromDate) && (bill.toDate)) ? `${dateToString("dd/MM/yyyy", bill.fromDate)}-${dateToString("dd/MM/yyyy", bill.toDate)}` : "",
                 name: customer.name,
                 address: customer.address,
                 taxCode: customer.taxCode,
                 rentAddress: customer.rentAddress,
+                customerCode: customer.code,
                 owner: customer.owner,
+                phoneNumber: customer.phoneNumber,
                 isEnterprise: customer.customerType === CustomerType.ENTERPRISE,
                 isPersonal: customer.customerType === CustomerType.PERSONAL,
-                totalFormat: `${formatNumber(bill.total)}đ`,
+                totalFormat: `${formatNumber(bill.total)}`,
                 numberBeginFormat: formatNumber(bill.numberBegin),
                 numberEndFormat: formatNumber(bill.numberEnd),
                 consumeFormat: formatNumber(bill.consume),
-                moneyToString: `${docso(bill.total)} đồng.`,
-                nameInBill: setting.nameInBill
-
+                beforeTaxFormat: formatNumber(bill.beforeTax),
+                feeFormat: formatNumber(bill.fee),
+                taxFormat: formatNumber(bill.tax),
+                unitFormat: tariff.typeOfPrice === TypeOfPrice.FIXED ? formatNumber(tariff.unit) : "",
+                taxPercel: tariff.taxPercel,
+                moneyToString: `${docso(bill.total)}`,
+                companyAddress: setting.companyAddress,
+                companyName: setting.companyName.toUpperCase(),
+                companyTaxCode: setting.companyTaxCode,
+                companyPhoneNumber: setting.companyPhoneNumber,
+                fromDateFormat: bill.fromDate ? dateToString("dd-MM-yyyy", bill.fromDate) : "",
+                toDateFormat: bill.toDate ? dateToString("dd-MM-yyyy", bill.toDate) : "",
+                dateBillFormat: bill.dateBill ? dateToString("dd-MM-yyyy", bill.dateBill) : "",
+                numberOfHouseholds: customer.numberOfHouseholds,
+                numberBill: numberBillCode(bill.numberBill, 7),
+                isFixed: tariff.typeOfPrice === TypeOfPrice.FIXED,
+                isDivision: tariff.typeOfPrice === TypeOfPrice.DIVISION,
+                rangePrices,
+                payTypeCode: payType.code
             }
+
             //set the templateVariables
             doc.setData(dataDoc);
 
@@ -686,7 +736,7 @@ class BillPage extends Component<Props, State>{
             var buff = doc.getZip()
                 .generate({ type: 'nodebuffer' });
 
-            fs.writeFile(`${pathFolder}/(${index + 1})${dataDoc.name.replace(/[^\w\s]/gi, '')}-(${dateToString("dd-MM-yyyy", bill.dateBill)}).docx`, buff, (err) => {
+            fs.writeFile(`${pathFolder}/(${typeOfFile === TypeOfFile.RECEIPTS ? "Phiếu thu" : "Hoá đơn"} ${index + 1})${dataDoc.name}-(${dateToString("dd-MM-yyyy", bill.dateBill)}).docx`, buff, (err) => {
                 if (!err)
                     numberFiles--
                 if (numberFiles === 0)
@@ -779,12 +829,12 @@ class BillPage extends Component<Props, State>{
             <div>
                 <Snackbar open={openSaveDoc} autoHideDuration={2000} onClose={() => this.setState({ openSaveDoc: false })}>
                     <Alert severity="info">
-                        Đang tạo hoá đơn
+                        Đang xuất file
                     </Alert>
                 </Snackbar>
                 <Snackbar open={saveStatus !== SaveStatus.NONE} autoHideDuration={1500} onClose={() => this.setState({ saveStatus: SaveStatus.NONE })}>
-                    <Alert severity={saveStatus === SaveStatus.SUCCESS ? "success" : saveStatus === SaveStatus.FAIL ? "error" : undefined}>
-                        {SaveStatus.SUCCESS ? "Tạo hoá đơn thành công" : "Có lỗi trong quá trình tạo hoá đơn"}
+                    <Alert severity={(saveStatus === SaveStatus.SUCCESS) ? "success" : saveStatus === SaveStatus.FAIL ? "error" : undefined}>
+                        {saveStatus === SaveStatus.SUCCESS ? "Xuất file thành công" : "Có lỗi trong quá trình xuất file"}
                     </Alert>
                 </Snackbar>
                 <EnhancedTable
@@ -796,11 +846,17 @@ class BillPage extends Component<Props, State>{
                     screen={screen}
                     selectControl={(
                         <Box display="flex" flexDirection="row" alignItems="center">
-                            <Button size="small" variant="contained" color="primary" style={{ width: 155, height: "100%", marginRight: 10, display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between" }} onClick={this.printBills}>
+                            <Button size="small" variant="contained" color="primary" style={{ width: 155, height: "100%", marginRight: 10, display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between" }} onClick={() => this.exportFile(TypeOfFile.BILL)}>
                                 <span>
                                     Xuất hoá đơn
                                 </span >
                                 <SaveAltIcon />
+                            </Button>
+                            <Button size="small" variant="contained" color="secondary" style={{ width: 170, height: "100%", marginRight: 10, display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between" }} onClick={() => this.exportFile(TypeOfFile.RECEIPTS)}>
+                                <span>
+                                    Xuất phiếu thu
+                                </span >
+                                <ReceiptIcon />
                             </Button>
                             <ChangeTime month={month} changeMonth={(month: Date) => {
                                 this.setState({ month }, this.loadData)

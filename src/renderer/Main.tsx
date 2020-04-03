@@ -25,6 +25,7 @@ import PeopleAltOutlinedIcon from '@material-ui/icons/PeopleAltOutlined';
 import AccountBalanceIcon from '@material-ui/icons/AccountBalance';
 import Container from '@material-ui/core/Container'
 import CustomersPage from '@/pages/CustomerPage'
+import { v4 as uuid4 } from 'uuid'
 import DateFnsUtils from '@date-io/date-fns';
 import { loadScreen } from '@/redux/screen/actions'
 import { loadTariffs } from '@/redux/tariffs/actions'
@@ -32,13 +33,16 @@ import { loadCustomers } from '@/redux/customers/actions'
 import { loadGlands } from '@/redux/glands/actions'
 import { loadBanks } from '@/redux/banks/actions'
 import { loadSetting } from '@/redux/setting/actions'
+import { loadPayTypes } from '@/redux/bills/actions'
 import TariffPage from '@/pages/TariffPage'
 import GlandPage from '@/pages/GlandPage'
 import BillPage from '@/pages/BillPage'
 import BankPage from '@/pages/BankPage'
+import PayTypePage from '@/pages/PayTypePage'
 import SettingsIcon from '@material-ui/icons/Settings';
+import AccountBalanceWalletIcon from '@material-ui/icons/AccountBalanceWallet';
 
-import { tariff, customer, gland, bank, setting } from '@/database'
+import { tariff, customer, gland, bank, setting, payType } from '@/database'
 
 import {
   MuiPickersUtilsProvider,
@@ -46,6 +50,7 @@ import {
 
 import { connect } from 'react-redux';
 import SettingPage from '@/pages/SettingPage';
+import { IPayType } from '@/redux/bills/types';
 
 const drawerWidth = 240;
 
@@ -118,7 +123,8 @@ const mapDispatchToProps = {
   loadCustomers,
   loadGlands,
   loadBanks,
-  loadSetting
+  loadSetting,
+  loadPayTypes
 }
 
 interface PropsFromDispatch {
@@ -126,8 +132,9 @@ interface PropsFromDispatch {
   loadTariffs: typeof loadTariffs
   loadCustomers: typeof loadCustomers
   loadGlands: typeof loadGlands
-  loadBanks: typeof loadBanks,
+  loadBanks: typeof loadBanks
   loadSetting: typeof loadSetting
+  loadPayTypes: typeof loadPayTypes
 }
 
 interface SelfProps {
@@ -136,7 +143,7 @@ interface SelfProps {
 
 type Props = PropsFromDispatch & SelfProps
 
-function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands, loadBanks, loadSetting }: Props) {
+function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands, loadBanks, loadSetting, loadPayTypes }: Props) {
 
 
   const [open, setOpen] = useState(false);
@@ -176,6 +183,31 @@ function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands, loadBa
         if (settings.length > 0)
           loadSetting(settings[0])
     })
+
+    payType.find({}, (err, payTypes) => {
+      if (err)
+        console.log(err)
+      else
+        if (payTypes.length > 0)
+          loadPayTypes(payTypes)
+        else {
+          const payTypes: IPayType[] = [{
+            _id: uuid4(),
+            name: "Tiền mặt",
+            code: "TM",
+            active: true,
+          },
+          {
+            _id: uuid4(),
+            name: "Chuyển khoản",
+            code: "CK",
+            active: true
+          }]
+          payType.insert(payTypes, (err, payTypes) => {
+            loadPayTypes(payTypes)
+          })
+        }
+    })
     window.addEventListener('resize', function (event: any) {
       event.preventDefault()
       if (event.srcElement !== null) {
@@ -208,6 +240,7 @@ function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands, loadBa
       case PageIds.BILLS: return <BillPage />
       case PageIds.BANKS: return <BankPage />
       case PageIds.SETTING: return <SettingPage />
+      case PageIds.PAY_TYPES: return <PayTypePage />
       default: return <BankPage />
     }
   }
@@ -272,7 +305,8 @@ function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands, loadBa
         <List>
           {[{ label: 'Khách hàng', pageId: PageIds.CUSTOMERS, icon: <PeopleAltOutlinedIcon /> },
           { label: 'Tuyến', pageId: PageIds.GLANDS, icon: <LinearScaleIcon /> },
-          { label: 'Ngân hàng', pageId: PageIds.BANKS, icon: <AccountBalanceIcon /> }].map((item, index) => (
+          { label: 'Ngân hàng', pageId: PageIds.BANKS, icon: <AccountBalanceIcon /> },
+          { label: 'Hình thức thanh toán', pageId: PageIds.PAY_TYPES, icon: <AccountBalanceWalletIcon /> }].map((item, index) => (
             <ListItem button key={item.pageId} onClick={() => handleChangePage(item.pageId)} style={{
               backgroundColor: item.pageId === pageId ? "rgba(241, 14, 124, 0.2)" : "inherit"
             }}>

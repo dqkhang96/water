@@ -1,6 +1,5 @@
 import { IBill, IChargeType, IPayType } from './types'
 import { Actions, ActionTypes } from './actions'
-import { stat } from 'fs'
 
 
 export interface State {
@@ -84,7 +83,22 @@ export function reducer(state: State = initState, action: Actions) {
         }
         case ActionTypes.DELETE_PAY_TYPE: {
             var newPayTypes = [...state.payTypes]
-            newPayTypes = newPayTypes.filter((item) => item._id !== action.payload)
+            if (Array.isArray(action.payload))
+                newPayTypes = newPayTypes.filter((item) => action.payload.indexOf(item._id) === -1)
+            else
+                newPayTypes = newPayTypes.filter((item) => item._id !== action.payload)
+            return {
+                ...state,
+                payTypes: newPayTypes
+            }
+        }
+        case ActionTypes.UPDATE_PAY_TYPE_PROPERTY: {
+            var newPayTypes = [...state.payTypes]
+            var indexItemChange: number = newPayTypes.findIndex((item) => item._id === action.payload._id)
+
+            if (indexItemChange === -1)
+                return state;
+            (newPayTypes[indexItemChange] as { [key: string]: any })[action.payload.property] = action.payload.value
             return {
                 ...state,
                 payTypes: newPayTypes

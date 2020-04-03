@@ -48,4 +48,6 @@ export interface IChargeType {
 export interface IPayType {
     _id: string
     name: string
+    code: string
+    active: boolean
 }

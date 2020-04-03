@@ -322,7 +322,7 @@ export default function EnhancedTable({ rows, headCells, title, selectControl, d
   return (
     <div className={classes.root}>
       <Container className={classes.container} style={{
-        marginBottom: 8, marginTop: 18
+        marginBottom: 8, marginTop: 5
       }}>
         <Paper className={classes.paper} >
           <EnhancedTableToolbar selectColor={selectToolbarColor} numSelected={selected.length} title={title} selectControl={selectControl} defaultControl={defaultControl} />

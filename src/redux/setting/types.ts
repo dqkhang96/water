@@ -1,6 +1,9 @@
 export interface ISetting {
     _id: string,
     dateBill: number,
-    nameInBill: string,
+    companyName: string,
+    companyAddress: string,
+    companyTaxCode: string,
+    companyPhoneNumber: string,
     timeUpdate: Date
 }

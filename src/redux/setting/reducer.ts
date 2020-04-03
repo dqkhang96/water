@@ -10,8 +10,11 @@ export interface State {
 
 export const initState: State = {
     item: {
-        dateBill: 5,
-        nameInBill: "",
+        dateBill: 25,
+        companyAddress: "",
+        companyTaxCode: "",
+        companyName: "",
+        companyPhoneNumber: "",
         _id: "none",
         timeUpdate: new Date()
     }

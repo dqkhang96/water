@@ -4,7 +4,8 @@ export enum PageIds {
     BANKS,
     GLANDS,
     TARIFFS,
-    SETTING
+    SETTING,
+    PAY_TYPES
 }
 
 export enum Types {
@@ -28,7 +29,8 @@ export enum TableTypes {
     TARIFF,
     CUSTOMER,
     GLAND,
-    BANK
+    BANK,
+    PAY_TYPE
 }
 
 

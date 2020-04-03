@@ -13,9 +13,9 @@ export const dateToString = (pattern: string, date: Date): string => {
     if (!date)
         return ""
     switch (pattern) {
-        case "dd-MM-yyyy": return `${date.getDate() < 10 ? '0' + date.getDate() : date.getDate()}-${date.getMonth() < 10 ? '0' + date.getMonth() : date.getMonth()}-${date.getFullYear()}`
-        case "dd/MM/yyyy": return `${date.getDate() < 10 ? '0' + date.getDate() : date.getDate()}/${date.getMonth() < 10 ? '0' + date.getMonth() : date.getMonth()}/${date.getFullYear()}`
-        case "#dd #MM #yyyy": return `Ngày ${date.getDate() < 10 ? '0' + date.getDate() : date.getDate()} tháng ${date.getMonth() < 10 ? '0' + date.getMonth() : date.getMonth()} năm ${date.getFullYear()}`
+        case "dd-MM-yyyy": return `${date.getDate() < 10 ? '0' + date.getDate() : date.getDate()}-${(date.getMonth() + 1) < 10 ? '0' + (date.getMonth() + 1) : (date.getMonth() + 1)}-${date.getFullYear()}`
+        case "dd/MM/yyyy": return `${date.getDate() < 10 ? '0' + date.getDate() : date.getDate()}/${(date.getMonth() + 1) < 10 ? '0' + (date.getMonth() + 1) : (date.getMonth() + 1)}/${date.getFullYear()}`
+        case "#dd #MM #yyyy": return `Ngày ${date.getDate() < 10 ? '0' + date.getDate() : date.getDate()} tháng ${(date.getMonth() + 1) < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1} năm ${date.getFullYear()}`
         default: return ""
     }
 
@@ -101,4 +101,13 @@ export function formatNumber(num: number | undefined): string {
     if ((num != 0) && (!num))
         return ""
     return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')
+}
+
+export function numberBillCode(num: number, count: number): string {
+    if ((num != 0) && (!num))
+        return "0"
+    var result = num.toString()
+    while (result.length < count)
+        result = "0" + result
+    return result
 }

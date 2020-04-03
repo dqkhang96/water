@@ -1,6 +1,6 @@
 import Datastore from 'nedb'
 import { ICustomer } from '@/redux/customers/types'
-import { Bill } from '@/redux/bills/types'
+import { Bill, IPayType } from '@/redux/bills/types'
 import { ITariff } from '@/redux/tariffs/types'
 import { IGland } from '@/redux/glands/types'
 import { IBank } from '@/redux/banks/types'
@@ -23,6 +23,10 @@ bank.loadDatabase(err => err && console.log(err))
 
 export const setting = new Datastore<ISetting>('stores/setting.duongbinh')
 setting.loadDatabase(err => err && console.log(err))
+
+export const payType = new Datastore<IPayType>('stores/payType.duongbinh')
+payType.loadDatabase(err => err && console.log(err))
+
 
 
 const db = {

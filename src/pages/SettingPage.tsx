@@ -59,6 +59,95 @@ class SettingPage extends Component<Props, State>{
                             <tbody>
                                 <tr>
                                     <td>
+                                        <InputLabel>Tên công ty</InputLabel>
+                                    </td>
+                                    <td>
+                                        <TextField
+
+                                            value={setting.companyName}
+                                            onChange={(event) => this.setState({
+                                                setting: {
+                                                    ...setting,
+                                                    _id: uuid4(),
+                                                    companyName: event.target.value
+                                                }
+                                            })}
+                                            placeholder="Tên công ty"
+                                            style={{
+                                                width: 400
+                                            }}
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <InputLabel>Địa chỉ công ty</InputLabel>
+                                    </td>
+                                    <td>
+                                        <TextField
+
+                                            value={setting.companyAddress}
+                                            onChange={(event) => this.setState({
+                                                setting: {
+                                                    ...setting,
+                                                    _id: uuid4(),
+                                                    companyAddress: event.target.value
+                                                }
+                                            })}
+                                            placeholder="Tên công ty"
+                                            style={{
+                                                width: 400
+                                            }}
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <InputLabel>Mã số thuế công ty</InputLabel>
+                                    </td>
+                                    <td>
+                                        <TextField
+
+                                            value={setting.companyTaxCode}
+                                            onChange={(event) => this.setState({
+                                                setting: {
+                                                    ...setting,
+                                                    _id: uuid4(),
+                                                    companyTaxCode: event.target.value
+                                                }
+                                            })}
+                                            placeholder="Tên công ty"
+                                            style={{
+                                                width: 400
+                                            }}
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <InputLabel>Số điện thoại công ty</InputLabel>
+                                    </td>
+                                    <td>
+                                        <TextField
+
+                                            value={setting.companyPhoneNumber}
+                                            onChange={(event) => this.setState({
+                                                setting: {
+                                                    ...setting,
+                                                    _id: uuid4(),
+                                                    companyPhoneNumber: event.target.value
+                                                }
+                                            })}
+                                            placeholder="Số diện thoại"
+                                            style={{
+                                                width: 400
+                                            }}
+                                        />
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td>
                                         <InputLabel>Ngày tính tiền</InputLabel>
                                     </td>
                                     <td>
@@ -85,29 +174,7 @@ class SettingPage extends Component<Props, State>{
                                             }}
                                             placeholder="Ngày lập hoá đơn"
                                             style={{
-                                                width: 80
-                                            }}
-                                        />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <InputLabel>Tên công ty</InputLabel>
-                                    </td>
-                                    <td>
-                                        <TextField
-
-                                            value={setting.nameInBill}
-                                            onChange={(event) => this.setState({
-                                                setting: {
-                                                    ...setting,
-                                                    _id: uuid4(),
-                                                    nameInBill: event.target.value
-                                                }
-                                            })}
-                                            placeholder="Tên công ty"
-                                            style={{
-                                                width: 400
+                                                width: 100
                                             }}
                                         />
                                     </td>

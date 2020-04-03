@@ -11,9 +11,12 @@ export enum ActionTypes {
     LOAD_CHANGE_TYPES = "LOAD_CHANGE_TYPES",
     ADD_CHANGE_TYPE = "ADD_CHANGE_TYPE",
     DELETE_CHANGE_TYPE = "DELETE_CHANGE_TYPE",
+
     LOAD_PAY_TYPES = "LOAD_PAY_TYPES",
     ADD_PAY_TYPE = "ADD_PAY_TYPE",
-    DELETE_PAY_TYPE = "DELETE_PAY_TYPE"
+    DELETE_PAY_TYPE = "DELETE_PAY_TYPE",
+    UPDATE_PAY_TYPE_PROPERTY = "UPDATE_PAY_TYPE_PROPERTY",
+
 
 }
 
@@ -39,14 +42,18 @@ export const addChangeType = (changeType: IChargeType) => action(ActionTypes.ADD
 export interface deleteChangeType { type: ActionTypes.DELETE_CHANGE_TYPE, payload: string }
 export const deleteChangeType = (changeTypeId: number) => action(ActionTypes.DELETE_CHANGE_TYPE, changeTypeId)
 
+
 export interface loadPayTypes { type: ActionTypes.LOAD_PAY_TYPES, payload: IPayType[] }
 export const loadPayTypes = (payTypes: IPayType[]) => action(ActionTypes.LOAD_PAY_TYPES, payTypes)
 
 export interface addPayType { type: ActionTypes.ADD_PAY_TYPE, payload: IPayType }
 export const addPayType = (payType: IPayType) => action(ActionTypes.ADD_PAY_TYPE, payType)
 
-export interface deletePayType { type: ActionTypes.DELETE_PAY_TYPE, payload: string }
-export const deletePayType = (payTypeId: number) => action(ActionTypes.DELETE_PAY_TYPE, payTypeId)
+export interface deletePayType { type: ActionTypes.DELETE_PAY_TYPE, payload: string | string[] }
+export const deletePayType = (payTypeId: string | string[]) => action(ActionTypes.DELETE_PAY_TYPE, payTypeId)
+
+export interface updatePayTypeProperty { type: ActionTypes.UPDATE_PAY_TYPE_PROPERTY, payload: { _id: string, property: string, value: any } }
+export const updatePayTypeProperty = (id: string, property: string, value: any) => action(ActionTypes.UPDATE_PAY_TYPE_PROPERTY, { _id: id, property, value })
 
 
-export type Actions = loadBills | addBill | deleteBill | updateBillProperty | loadChangeTypes | addChangeType | deleteChangeType | loadPayTypes | addPayType | deletePayType
+export type Actions = loadBills | addBill | deleteBill | updateBillProperty | loadChangeTypes | addChangeType | deleteChangeType | loadPayTypes | addPayType | deletePayType | updatePayTypeProperty

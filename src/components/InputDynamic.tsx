@@ -8,12 +8,13 @@ import MenuItem from '@material-ui/core/MenuItem'
 import { tariffs } from '@/redux/tariffs/selectors'
 import { banks } from '@/redux/banks/selectors'
 import { glands } from '@/redux/glands/selectors'
+import { payTypes } from '@/redux/bills/selectors'
 import { createMuiTheme } from '@material-ui/core/styles'
 import { ITariff, TypeOfPrice, RangePrice } from '@/redux/tariffs/types'
 import { IBank } from '@/redux/banks/types'
 import { IGland } from '@/redux/glands/types'
+import { IPayType } from '@/redux/bills/types'
 import Box from '@material-ui/core/Box';
-import Divider from '@material-ui/core/Divider'
 import { Tooltip, IconButton, TextField, ThemeProvider } from '@material-ui/core';
 import AddBoxIcon from '@material-ui/icons/AddBox';
 import DeleteIcon from '@material-ui/icons/Delete';
@@ -35,14 +36,15 @@ const theme = createMuiTheme()
 const mapStateToProps = (state: AppState) => ({
     tariffs: tariffs(state),
     banks: banks(state),
-    glands: glands(state)
+    glands: glands(state),
+    payTypes: payTypes(state)
 })
 
 interface PropsFromState {
     tariffs: ITariff[]
     banks: IBank[]
     glands: IGland[]
-    row: Row
+    payTypes: IPayType[]
 }
 
 interface SelfProps {
@@ -51,6 +53,7 @@ interface SelfProps {
     value: any
     onChange: (value: any) => void
     tableType: TableTypes
+    row: Row
 }
 
 interface Option {
@@ -61,7 +64,7 @@ interface Option {
 
 type Props = SelfProps & PropsFromState
 
-const InputDynamic = ({ headCell, value, onChange, classes, tariffs, banks, glands, tableType, row }: Props) => {
+const InputDynamic = ({ headCell, value, onChange, classes, tariffs, banks, glands, tableType, row, payTypes }: Props) => {
     var [open, setOpen] = useState(false)
     var [currentValue, setValue] = useState(value)
     var [focus, setFocus] = useState(false)
@@ -85,6 +88,7 @@ const InputDynamic = ({ headCell, value, onChange, classes, tariffs, banks, glan
             case Types.TARIFF: return (tariffs) ? (tariffs) : []
             case Types.BANK: return (banks) ? (banks) : []
             case Types.GLAND: return (glands) ? (glands) : []
+            case Types.PAY_TYPE: return (payTypes) ? (payTypes) : []
             default: return []
         }
     }
@@ -161,11 +165,10 @@ const InputDynamic = ({ headCell, value, onChange, classes, tariffs, banks, glan
             case Types.CHARGE_TYPE:
             case Types.PAY_TYPE:
             case Types.BANK:
-            case Types.GLAND: {
+            case Types.GLAND:
+            case Types.PAY_TYPE: {
                 return (
                     <Select
-                        labelId="demo-controlled-open-select-label"
-                        id="demo-controlled-open-select"
                         open={open}
                         value={value}
                         onChange={(event) => {
@@ -189,8 +192,6 @@ const InputDynamic = ({ headCell, value, onChange, classes, tariffs, banks, glan
             case Types.TYPE_OF_PRICE: {
                 return (
                     <Select
-                        labelId="demo-controlled-open-select-label"
-                        id="demo-controlled-open-select"
                         open={open}
                         value={value}
                         onChange={(event) => {
@@ -211,8 +212,6 @@ const InputDynamic = ({ headCell, value, onChange, classes, tariffs, banks, glan
             case Types.CUSTOMER_TYPE: {
                 return (
                     <Select
-                        labelId="demo-controlled-open-select-label"
-                        id="demo-controlled-open-select"
                         open={open}
                         value={value}
                         onChange={(event) => {
