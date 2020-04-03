@@ -11,10 +11,10 @@ export interface State {
 export const initState: State = {
     item: {
         dateBill: 25,
-        companyAddress: "",
-        companyTaxCode: "",
-        companyName: "",
-        companyPhoneNumber: "",
+        companyAddress: "Số 16 tòa nhà TNR đương Nguyễn Chí Thanh, quận Đống Đa, Hà Nội",
+        companyTaxCode: "123456789",
+        companyName: "Công ty DevSamurai Việt Nam",
+        companyPhoneNumber: "0987654321",
         _id: "none",
         timeUpdate: new Date()
     }
