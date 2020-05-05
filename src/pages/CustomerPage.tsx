@@ -17,10 +17,10 @@ import AddBoxIcon from '@material-ui/icons/AddBox';
 import { WIDTH_SEARCH_BAR } from '@/utils/constant';
 import { glands } from '@/redux/glands/selectors'
 import { IGland } from '@/redux/glands/types'
-import {ITariff} from '@/redux/tariffs/types'
-import {IPayType} from '@/redux/bills/types'
-import {tariffs} from '@/redux/tariffs/selectors'
-import {payTypes} from '@/redux/bills/selectors'
+import { ITariff } from '@/redux/tariffs/types'
+import { IPayType } from '@/redux/bills/types'
+import { tariffs } from '@/redux/tariffs/selectors'
+import { payTypes } from '@/redux/bills/selectors'
 import Chip from '@material-ui/core/Chip';
 import lodash from 'lodash'
 import Autocomplete from '@material-ui/lab/Autocomplete';
@@ -92,41 +92,41 @@ const headCells: HeadCell[] = [{
     label: "Mã đồng hồ",
     disablePadding: false,
 },
-{
-    propertyName: "numberOfHouseholds",
-    type: Types.NUMBER,
-    disableEditor: false,
-    label: "Số hộ",
-    disablePadding: false,
-},
-{
-    propertyName: "numberOfPeople",
-    type: Types.NUMBER,
-    disableEditor: false,
-    label: "Số nhân khẩu",
-    disablePadding: false,
-},
-{
-    propertyName: "phoneNumber",
-    type: Types.STRING,
-    disableEditor: false,
-    label: "Số điện thoại",
-    disablePadding: false,
-},
-{
-    propertyName: "taxCode",
-    type: Types.STRING,
-    disableEditor: false,
-    label: "Mã số thuế",
-    disablePadding: false,
-},
-{
-    propertyName: "email",
-    type: Types.STRING,
-    disableEditor: false,
-    label: "Địa chỉ email",
-    disablePadding: false,
-},
+// {
+//     propertyName: "numberOfHouseholds",
+//     type: Types.NUMBER,
+//     disableEditor: false,
+//     label: "Số hộ",
+//     disablePadding: false,
+// },
+// {
+//     propertyName: "numberOfPeople",
+//     type: Types.NUMBER,
+//     disableEditor: false,
+//     label: "Số nhân khẩu",
+//     disablePadding: false,
+// },
+// {
+//     propertyName: "phoneNumber",
+//     type: Types.STRING,
+//     disableEditor: false,
+//     label: "Số điện thoại",
+//     disablePadding: false,
+// },
+// {
+//     propertyName: "taxCode",
+//     type: Types.STRING,
+//     disableEditor: false,
+//     label: "Mã số thuế",
+//     disablePadding: false,
+// },
+// {
+//     propertyName: "email",
+//     type: Types.STRING,
+//     disableEditor: false,
+//     label: "Địa chỉ email",
+//     disablePadding: false,
+// },
 {
     propertyName: "contractCode",
     type: Types.STRING,
@@ -141,13 +141,13 @@ const headCells: HeadCell[] = [{
     label: "Ngày hợp đồng",
     disablePadding: false,
 },
-{
-    propertyName: "environmentalProtectionFee",
-    type: Types.NUMBER,
-    disableEditor: false,
-    label: "Phí BVMT",
-    disablePadding: false,
-},
+// {
+//     propertyName: "environmentalProtectionFee",
+//     type: Types.NUMBER,
+//     disableEditor: false,
+//     label: "Phí BVMT",
+//     disablePadding: false,
+// },
 // {
 //     propertyName: "chargeTypeId",
 //     type: Types.CHARGE_TYPE,
@@ -162,13 +162,13 @@ const headCells: HeadCell[] = [{
     label: "HT thanh toán",
     disablePadding: false,
 },
-{
-    propertyName: "bankId",
-    type: Types.BANK,
-    disableEditor: false,
-    label: "Ngân hàng",
-    disablePadding: false,
-},
+// {
+//     propertyName: "bankId",
+//     type: Types.BANK,
+//     disableEditor: false,
+//     label: "Ngân hàng",
+//     disablePadding: false,
+// },
 {
     propertyName: "beginUse",
     type: Types.DATETIME,
@@ -202,8 +202,8 @@ const mapStateToProps = (state: AppState) => ({
     customers: customers(state),
     screen: screen(state),
     glands: glands(state),
-    tariffs:tariffs(state),
-    payTypes:payTypes(state)
+    tariffs: tariffs(state),
+    payTypes: payTypes(state)
 })
 
 interface SelfProps {
@@ -221,8 +221,8 @@ interface PropsFromState {
     customers: ICustomer[]
     screen: IScreen
     glands: IGland[]
-    payTypes:IPayType[]
-    tariffs:ITariff[]
+    payTypes: IPayType[]
+    tariffs: ITariff[]
 }
 
 type Props = SelfProps & PropsFromState & PropsFromDispatch
@@ -313,11 +313,13 @@ class CustomersPage extends Component<Props, State>{
         this.setState({ searchOptions })
     }
 
-    addCustomer() { 
-        const tariffDefault=this.props.tariffs.find((tariff)=>tariff.default)
-        const payTypeDefault=this.props.payTypes.find((payType)=>payType.default)
-        customer.insert({ ...newCustomer,payTypeId:payTypeDefault?payTypeDefault._id:"",
-        tariffId:tariffDefault?tariffDefault._id:"", _id: uuid4() }, (err, customer) => {
+    addCustomer() {
+        const tariffDefault = this.props.tariffs.find((tariff) => tariff.default)
+        const payTypeDefault = this.props.payTypes.find((payType) => payType.default)
+        customer.insert({
+            ...newCustomer, payTypeId: payTypeDefault ? payTypeDefault._id : "",
+            tariffId: tariffDefault ? tariffDefault._id : "", _id: uuid4()
+        }, (err, customer) => {
             if (err)
                 console.log(err)
             else

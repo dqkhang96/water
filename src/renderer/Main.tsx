@@ -196,14 +196,14 @@ function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands, loadBa
             name: "Tiền mặt",
             code: "TM",
             active: true,
-            default:true
+            default: true
           },
           {
             _id: uuid4(),
             name: "Chuyển khoản",
             code: "CK",
             active: true,
-            default:false
+            default: false
           }]
           payType.insert(payTypes, (err, payTypes) => {
             loadPayTypes(payTypes)
@@ -307,8 +307,9 @@ function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands, loadBa
         <List>
           {[{ label: 'Khách hàng', pageId: PageIds.CUSTOMERS, icon: <PeopleAltOutlinedIcon /> },
           { label: 'Tuyến', pageId: PageIds.GLANDS, icon: <LinearScaleIcon /> },
-          { label: 'Ngân hàng', pageId: PageIds.BANKS, icon: <AccountBalanceIcon /> },
-          { label: 'Hình thức thanh toán', pageId: PageIds.PAY_TYPES, icon: <AccountBalanceWalletIcon /> }].map((item, index) => (
+          // { label: 'Ngân hàng', pageId: PageIds.BANKS, icon: <AccountBalanceIcon /> },
+          { label: 'Hình thức thanh toán', pageId: PageIds.PAY_TYPES, icon: <AccountBalanceWalletIcon /> }
+          ].map((item, index) => (
             <ListItem button key={item.pageId} onClick={() => handleChangePage(item.pageId)} style={{
               backgroundColor: item.pageId === pageId ? "rgba(241, 14, 124, 0.2)" : "inherit"
             }}>

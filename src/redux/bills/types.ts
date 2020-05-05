@@ -7,7 +7,6 @@ export interface IBill {
     consume?: number
     beforeTax?: number
     tax?: number
-    fee?: number
     total?: number
     payed?: number
     datePay?: Date | null
@@ -32,7 +31,8 @@ export interface IBill {
     toDate: Date | null
     numberPrint?: number
     note?: string
-    feeNumber: number
+    //fee?: number
+    //feeNumber: number
     isStored: boolean
 
 }
@@ -49,6 +49,6 @@ export interface IPayType {
     _id: string
     name: string
     code: string
-    default:boolean
+    default: boolean
     active: boolean
 }

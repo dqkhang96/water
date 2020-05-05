@@ -8,9 +8,9 @@ export interface ICustomer {
     glandId: string
     numberOfHouseholds: number
     numberOfPeople: number
-    phoneNumber: string
-    taxCode: string
-    email: string
+    // phoneNumber: string
+    // taxCode: string
+    // email: string
     customerType: CustomerType
     owner: string
     rentAddress: string
@@ -18,7 +18,7 @@ export interface ICustomer {
     contractDate: Date | null
     chargeTypeId: string
     payTypeId: string
-    environmentalProtectionFee: number
+    //environmentalProtectionFee: number
     bankId: string
     beginUse: Date | null
     endUse: Date | null

@@ -134,22 +134,22 @@ const headCells: HeadCell[] = [
         disablePadding: false,
         label: "Thuế giá trị gia tăng"
     },
-    {
-        propertyName: "feeNumber",
-        type: Types.NUMBER,
-        width: 180,
-        disableEditor: false,
-        disablePadding: false,
-        label: "Mức phí BVMT"
-    },
-    {
-        propertyName: "fee",
-        type: Types.NUMBER,
-        width: 180,
-        disableEditor: true,
-        disablePadding: false,
-        label: "Phí bảo vệ môi trường"
-    },
+    // {
+    //     propertyName: "feeNumber",
+    //     type: Types.NUMBER,
+    //     width: 180,
+    //     disableEditor: false,
+    //     disablePadding: false,
+    //     label: "Mức phí BVMT"
+    // },
+    // {
+    //     propertyName: "fee",
+    //     type: Types.NUMBER,
+    //     width: 180,
+    //     disableEditor: true,
+    //     disablePadding: false,
+    //     label: "Phí bảo vệ môi trường"
+    // },
     {
         propertyName: "total",
         width: 180,
@@ -158,14 +158,14 @@ const headCells: HeadCell[] = [
         disablePadding: false,
         label: "Tổng tiền"
     },
-    {
-        propertyName: "payed",
-        type: Types.NUMBER,
-        width: 180,
-        disableEditor: false,
-        disablePadding: false,
-        label: "Đã T.Toán"
-    },
+    // {
+    //     propertyName: "payed",
+    //     type: Types.NUMBER,
+    //     width: 180,
+    //     disableEditor: false,
+    //     disablePadding: false,
+    //     label: "Đã T.Toán"
+    // },
     {
         propertyName: "datePay",
         type: Types.DATETIME,
@@ -418,7 +418,7 @@ class BillPage extends Component<Props, State>{
     loadData(props?: Props) {
 
         const { month } = this.state
-        const { customers, glands, setting ,tariffs,payTypes} = props ? props : this.props
+        const { customers, glands, setting, tariffs, payTypes } = props ? props : this.props
         const that = this
 
         const { fromDate, toDate } = getRangeBillDate(month, setting.dateBill)
@@ -443,26 +443,26 @@ class BillPage extends Component<Props, State>{
                                 customerAddress: customer.address
                             }
                         maxNumberBill += 1
-                        const tariffDefault=tariffs.find((tariff)=>tariff.default)
-                        const payTypeDefault=payTypes.find((payType)=>payType.default)
+                        const tariffDefault = tariffs.find((tariff) => tariff.default)
+                        const payTypeDefault = payTypes.find((payType) => payType.default)
                         const newBill: Bill = {
                             _id: uuid4(),
-                            taxCode: customer.taxCode,
+                            // taxCode: customer.taxCode,
                             index: index + 1,
                             month,
                             customerCode: customer.code,
                             customerId: customer._id,
                             customerName: customer.name,
                             customerAddress: customer.address,
-                            payTypeId: customer.payTypeId?customer.payTypeId:payTypeDefault?payTypeDefault._id:"",
+                            payTypeId: customer.payTypeId ? customer.payTypeId : payTypeDefault ? payTypeDefault._id : "",
                             waterMeterCode: customer.waterMeterCode,
-                            tariffId: customer.tariffId?customer.tariffId:tariffDefault?tariffDefault._id:"",
+                            tariffId: customer.tariffId ? customer.tariffId : tariffDefault ? tariffDefault._id : "",
                             glandId: customer.glandId,
                             period: 1,
                             numberBegin: lastBill ? lastBill.numberEnd ? lastBill.numberEnd : null : null,
                             numberOfHouseholds: customer.numberOfHouseholds,
                             numberOfPeople: customer.numberOfPeople,
-                            feeNumber: 10,
+                            //feeNumber: 10,
                             numberBill: maxNumberBill,
                             dateBill: new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate() + 1),
                             datePay: null,
@@ -676,10 +676,10 @@ class BillPage extends Component<Props, State>{
             var tariff = tariffs.find((tariff: ITariff) => tariff._id === bill.tariffId)
             const customer = customers.find((customer) => customer._id === bill.customerId)
             var payType = payTypes.find((payType) => payType._id === bill.payTypeId)
-            if(!tariff)
-            tariff=tariffs.find((tariff)=>tariff.default)
-            if(!payType)
-            payType=payTypes.find((payType)=>payType.default)
+            if (!tariff)
+                tariff = tariffs.find((tariff) => tariff.default)
+            if (!payType)
+                payType = payTypes.find((payType) => payType.default)
 
             if ((!customer) || (!tariff) || (!payType))
                 return;
@@ -697,11 +697,11 @@ class BillPage extends Component<Props, State>{
                 rangeDate: ((bill.fromDate) && (bill.toDate)) ? `${dateToString("dd/MM/yyyy", bill.fromDate)}-${dateToString("dd/MM/yyyy", bill.toDate)}` : "",
                 name: customer.name,
                 address: customer.address,
-                taxCode: customer.taxCode,
+                //taxCode: customer.taxCode,
                 rentAddress: customer.rentAddress,
                 customerCode: customer.code,
                 owner: customer.owner,
-                phoneNumber: customer.phoneNumber,
+                //phoneNumber: customer.phoneNumber,
                 isEnterprise: customer.customerType === CustomerType.ENTERPRISE,
                 isPersonal: customer.customerType === CustomerType.PERSONAL,
                 totalFormat: `${formatNumber(bill.total)}`,
@@ -709,7 +709,7 @@ class BillPage extends Component<Props, State>{
                 numberEndFormat: formatNumber(bill.numberEnd),
                 consumeFormat: formatNumber(bill.consume),
                 beforeTaxFormat: formatNumber(bill.beforeTax),
-                feeFormat: formatNumber(bill.fee),
+                //feeFormat: formatNumber(bill.fee),
                 taxFormat: formatNumber(bill.tax),
                 unitFormat: tariff.typeOfPrice === TypeOfPrice.FIXED ? formatNumber(tariff.unit) : "",
                 taxPercel: tariff.taxPercel,
@@ -803,9 +803,9 @@ class BillPage extends Component<Props, State>{
             const tariff = tariffs.find((tariff) => tariff._id === bill.tariffId)
             const numberBegin: number = bill.numberBegin
             const numberEnd: number = bill.numberEnd
-            const feeNumber: number = bill.feeNumber
+            //const feeNumber: number = bill.feeNumber
 
-            if ((tariff) && (numberBegin) && (numberEnd) && (feeNumber)) {
+            if ((tariff) && (numberBegin) && (numberEnd)) {
                 var rangePrices: RangePrice[] = tariff.rangePrices
                 var typeOfPrice: TypeOfPrice = tariff.typeOfPrice
                 bill.consume = numberEnd - numberBegin
@@ -824,8 +824,8 @@ class BillPage extends Component<Props, State>{
                     bill.beforeTax = beforeTax
                 }
                 bill.tax = Math.round(bill.beforeTax * tariff.taxPercel / 100)
-                bill.fee = Math.round(bill.beforeTax * feeNumber / 100)
-                bill.total = bill.beforeTax + bill.tax + bill.fee
+                // bill.fee = Math.round(bill.beforeTax * feeNumber / 100)
+                bill.total = bill.beforeTax + bill.tax //+ bill.fee
 
                 if (bill.payed)
                     bill.rest = bill.total - bill.payed
