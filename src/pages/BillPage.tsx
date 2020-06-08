@@ -197,27 +197,6 @@ const headCells: HeadCell[] = [
         disablePadding: false,
         label: "Tuyến"
     },
-    // {
-    //     propertyName: "period",
-    //     type: Types.NUMBER,
-    //     disableEditor: false,
-    //     disablePadding: false,
-    //     label: "Số kì"
-    // },
-    // {
-    //     propertyName: "numberOfHouseholds",
-    //     type: Types.NUMBER,
-    //     disableEditor: false,
-    //     disablePadding: false,
-    //     label: "Số hộ"
-    // },
-    // {
-    //     propertyName: "numberOfPeople",
-    //     type: Types.NUMBER,
-    //     disableEditor: false,
-    //     disablePadding: false,
-    //     label: "Số NK"
-    // },
 
     {
         propertyName: "numberBill",
