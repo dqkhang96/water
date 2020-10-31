@@ -10,16 +10,16 @@ let mainWindow: Electron.BrowserWindow | null;
 function createWindow(): void {
     // Create the browser window.
     mainWindow = new BrowserWindow({
-        height: 600,
-        width: 800,
-        icon: path.join(__dirname, 'assets/icons/logo.png'),
+        height: 800,
+        width: 1200,
+        icon: path.join(__dirname, 'assets/icons/logo.ico'),
         webPreferences: {
             webSecurity: false,
             devTools: process.env.NODE_ENV === 'production' ? false : true
         }
     });
 
-
+    mainWindow.maximize()
     // and load the index.html of the app.
     mainWindow.loadURL(
         url.format({

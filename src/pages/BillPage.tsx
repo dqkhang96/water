@@ -103,6 +103,14 @@ const headCells: HeadCell[] = [
         label: "CS cuối kì"
     },
     {
+        propertyName: "multiplier",
+        type: Types.NUMBER,
+        width: 100,
+        disableEditor: false,
+        disablePadding: false,
+        label: "Hệ số nhân"
+    },
+    {
         propertyName: "consume",
         type: Types.NUMBER,
         width: 100,
@@ -122,7 +130,7 @@ const headCells: HeadCell[] = [
         propertyName: "beforeTax",
         type: Types.NUMBER,
         width: 180,
-        disableEditor: true,
+        disableEditor: false,
         disablePadding: false,
         label: "Trước thuế"
     },
@@ -130,26 +138,26 @@ const headCells: HeadCell[] = [
         propertyName: "tax",
         type: Types.NUMBER,
         width: 180,
-        disableEditor: true,
+        disableEditor: false,
         disablePadding: false,
         label: "Thuế giá trị gia tăng"
     },
-    // {
-    //     propertyName: "feeNumber",
-    //     type: Types.NUMBER,
-    //     width: 180,
-    //     disableEditor: false,
-    //     disablePadding: false,
-    //     label: "Mức phí BVMT"
-    // },
-    // {
-    //     propertyName: "fee",
-    //     type: Types.NUMBER,
-    //     width: 180,
-    //     disableEditor: true,
-    //     disablePadding: false,
-    //     label: "Phí bảo vệ môi trường"
-    // },
+    {
+        propertyName: "feeNumber",
+        type: Types.NUMBER,
+        width: 180,
+        disableEditor: false,
+        disablePadding: false,
+        label: "Mức phí BVMT(%)"
+    },
+    {
+        propertyName: "fee",
+        type: Types.NUMBER,
+        width: 180,
+        disableEditor: false,
+        disablePadding: false,
+        label: "Phí bảo vệ môi trường"
+    },
     {
         propertyName: "total",
         width: 180,
@@ -289,7 +297,8 @@ interface State {
     searchOptionSelecteds: SearchOption[]
     openSaveDoc: boolean
     saveStatus: SaveStatus
-
+    autoUpdateTax: boolean
+    autoUpdateFee: boolean
 }
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -373,7 +382,9 @@ class BillPage extends Component<Props, State>{
             searchOptionSelecteds: [],
             month: new Date(date.getFullYear(), date.getMonth()),
             saveStatus: SaveStatus.NONE,
-            openSaveDoc: false
+            openSaveDoc: false,
+            autoUpdateFee: true,
+            autoUpdateTax: true
         }
         this.updateProperty = this.updateProperty.bind(this)
         this.delete = this.delete.bind(this)
@@ -429,6 +440,8 @@ class BillPage extends Component<Props, State>{
                             // taxCode: customer.taxCode,
                             index: index + 1,
                             month,
+                            autoUpdateTax: true,
+                            autoUpdateFee: true,
                             customerCode: customer.code,
                             customerId: customer._id,
                             customerName: customer.name,
@@ -439,9 +452,10 @@ class BillPage extends Component<Props, State>{
                             glandId: customer.glandId,
                             period: 1,
                             numberBegin: lastBill ? lastBill.numberEnd ? lastBill.numberEnd : null : null,
+                            multiplier: lastBill ? lastBill.multiplier ? lastBill.multiplier : 1 : 1,
                             numberOfHouseholds: customer.numberOfHouseholds,
                             numberOfPeople: customer.numberOfPeople,
-                            //feeNumber: 10,
+                            feeNumber: 10,
                             numberBill: maxNumberBill,
                             dateBill: new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate() + 1),
                             datePay: null,
@@ -557,28 +571,36 @@ class BillPage extends Component<Props, State>{
         const { bills } = this.state
         const updateBillProperty = (lastId: string, bill: any, property: string, value: any) => {
             bill[property] = value
-            if ((property === "numberBegin") || (property == "numberEnd") || (property === "tariffId") || (property === "feeNumber")) {
+            if ((property) === "fee") {
+                bill.autoUpdateFee = false
                 that.updateBill(lastId, bill)
-            } else
-                if (property === "payed") {
-                    bill.payed = value
-                    if ((bill.total) && (!value))
-                        bill.payed = 0;
-                    else {
-                        const rest = bill.total - bill.payed
-                        const datePay = new Date()
-                        bill.rest = rest
-                        bill.datePay = datePay
-                        bill.historyPay.push({
-                            payed: value,
-                            datePay: datePay
-                        })
+            } else if ((property === "tax")){
+                bill.autoUpdateTax = false
+                that.updateBill(lastId, bill)
+            }
+            else
+                if ((property === "numberBegin") || (property === "multiplier") || (property === "numberEnd") || (property === "tariffId") || (property === "feeNumber")) {
+                    that.updateBill(lastId, bill)
+                } else
+                    if (property === "payed") {
+                        bill.payed = value
+                        if ((bill.total) && (!value))
+                            bill.payed = 0;
+                        else {
+                            const rest = bill.total - bill.payed
+                            const datePay = new Date()
+                            bill.rest = rest
+                            bill.datePay = datePay
+                            bill.historyPay.push({
+                                payed: value,
+                                datePay: datePay
+                            })
+                        }
+                        that.updateBill(lastId, bill)
+                    } else {
+                        bill[property] = value
+                        that.updateBill(lastId, bill)
                     }
-                    that.updateBill(lastId, bill)
-                } else {
-                    bill[property] = value
-                    that.updateBill(lastId, bill)
-                }
         }
 
         const bill = bills.find(bill => bill._id === id)
@@ -688,8 +710,9 @@ class BillPage extends Component<Props, State>{
                 numberEndFormat: formatNumber(bill.numberEnd),
                 consumeFormat: formatNumber(bill.consume),
                 beforeTaxFormat: formatNumber(bill.beforeTax),
+                multiplierFormat: formatNumber(bill.multiplier),
                 //feeFormat: formatNumber(bill.fee),
-                taxFormat: formatNumber(bill.tax),
+                taxFormat: formatNumber(bill.tax+bill.fee),
                 unitFormat: tariff.typeOfPrice === TypeOfPrice.FIXED ? formatNumber(tariff.unit) : "",
                 taxPercel: tariff.taxPercel,
                 moneyToString: `${docso(bill.total)}`,
@@ -722,7 +745,7 @@ class BillPage extends Component<Props, State>{
             var buff = doc.getZip()
                 .generate({ type: 'nodebuffer' });
 
-            fs.writeFile(`${pathFolder}/(${typeOfFile === TypeOfFile.RECEIPTS ? "Phiếu thu" : "Hoá đơn"} ${index + 1})${dataDoc.name}-(${dateToString("dd-MM-yyyy", bill.dateBill)}).docx`, buff, (err) => {
+            fs.writeFile(`${pathFolder}/(${typeOfFile === TypeOfFile.RECEIPTS ? "Phiếu thu nước sản xuất" : "Hoá đơn nước sản xuất"} ${index + 1})-(${dateToString("dd-MM-yyyy", bill.dateBill)})-${dataDoc.name}.docx`, buff, (err) => {
                 if (!err)
                     numberFiles--
                 if (numberFiles === 0)
@@ -787,9 +810,10 @@ class BillPage extends Component<Props, State>{
             if ((tariff) && (numberBegin) && (numberEnd)) {
                 var rangePrices: RangePrice[] = tariff.rangePrices
                 var typeOfPrice: TypeOfPrice = tariff.typeOfPrice
-                bill.consume = numberEnd - numberBegin
+                bill.consume = (numberEnd - numberBegin) * bill.multiplier
+
                 if (typeOfPrice === TypeOfPrice.FIXED) {
-                    bill.beforeTax = Math.round(bill.consume * tariff.unit)
+                    bill.beforeTax = Math.round(bill.consume * tariff.unit) 
                 } else {
                     var beforeTax = 0, i = 0
                     var consume = bill.consume
@@ -802,9 +826,11 @@ class BillPage extends Component<Props, State>{
                         beforeTax += consume * rangePrices[rangePrices.length - 1].unit
                     bill.beforeTax = beforeTax
                 }
-                bill.tax = Math.round(bill.beforeTax * tariff.taxPercel / 100)
-                // bill.fee = Math.round(bill.beforeTax * feeNumber / 100)
-                bill.total = bill.beforeTax + bill.tax //+ bill.fee
+                if (bill.autoUpdateTax)
+                    bill.tax = bill.beforeTax * tariff.taxPercel / 100
+                if (bill.autoUpdateFee)
+                    bill.fee = bill.beforeTax * bill.feeNumber / 100
+                bill.total = Math.round(bill.beforeTax + bill.tax + bill.fee)
 
                 if (bill.payed)
                     bill.rest = bill.total - bill.payed

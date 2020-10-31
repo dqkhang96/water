@@ -4,9 +4,14 @@ export interface IBill {
     customerId: string
     numberBegin?: number
     numberEnd?: number
+    multiplier:number
+    fee:number
+    feeNumber:number
     consume?: number
     beforeTax?: number
     tax?: number
+    autoUpdateTax:boolean
+    autoUpdateFee:boolean
     total?: number
     payed?: number
     datePay?: Date | null

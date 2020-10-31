@@ -269,7 +269,7 @@ function MiniDrawer({ loadScreen, loadTariffs, loadCustomers, loadGlands, loadBa
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap>
-            Quản lý nước sinh hoạt
+            Quản lý nước sản xuất
           </Typography>
         </Toolbar>
       </AppBar>

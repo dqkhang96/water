@@ -92,9 +92,9 @@ type Props = SelfProps & PropsFromState & PropsFromDispatch
 const newGland: IGland = {
     _id: uuid4(),
     code: "NEW",
-    name: "Bảng giá mới",
-    curator: "Dương Bính",
-    zone: "Xuân Phú",
+    name: "Tuyến mới",
+    curator: "Nguyễn Dương",
+    zone: "Binh Yên",
     active: true
 }
 

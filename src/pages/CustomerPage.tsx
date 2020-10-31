@@ -187,7 +187,7 @@ const headCells: HeadCell[] = [{
     propertyName: "active",
     type: Types.BOOLEAN,
     disableEditor: false,
-    label: "Kich hoặt",
+    label: "Kích hoạt",
     disablePadding: false,
 }]
 
